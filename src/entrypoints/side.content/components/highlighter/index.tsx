@@ -92,10 +92,14 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
       const result = await exportHighlightsWithExplanations()
       toast.success(`Successfully exported ${result.added} cards to Anki! Exported highlights have been removed.`)
 
-      // 刷新高亮显示数据
-      await getHighlightData()
-
-      location.reload()
+      // 移除已导出的高亮
+      if (result.exportedHighlightIds && result.exportedHighlightIds.length > 0) {
+        result.exportedHighlightIds.forEach((highlightId) => {
+          removeHighlight(highlightId)
+        })
+        // 刷新数据显示
+        await getHighlightData()
+      }
     }
     catch (error) {
       toast.error(`Anki export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
