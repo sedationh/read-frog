@@ -2,6 +2,7 @@ import type { HighlightState } from '@/types/highlight'
 import { kebabCase } from 'case-anything'
 import { Clipboard, Database, FileText, Highlighter, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useAnki } from '@/hooks/useAnki'
 import { useHighlighter } from '@/hooks/useHighlighter'
 import { APP_NAME } from '@/utils/constants/app'
 import { COLOR_OPTIONS } from '@/utils/highlight'
@@ -30,7 +31,6 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
     toggleActive,
     setConflictMessage,
     copyPrompt,
-    copyHighlightsData,
     importExplanationsFromClipboard,
     getHighlightData,
   } = useHighlighter({
@@ -40,26 +40,19 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
 
   const [exportMessage, setExportMessage] = useState('')
   const [importMessage, setImportMessage] = useState('')
-  const [showExplanations, setShowExplanations] = useState(false)
+  const [showExplanations, setShowExplanations] = useState(true)
+
+  // Anki integration
+  const {
+    isExporting: isExportingToAnki,
+    exportHighlightsWithExplanations,
+  } = useAnki()
 
   // 处理复制 Prompt
   const handleCopyPrompt = async () => {
     try {
       await copyPrompt()
       setExportMessage('✅ Prompt copied to clipboard!')
-      setTimeout(() => setExportMessage(''), 3000)
-    }
-    catch (error) {
-      setExportMessage(`❌ Copy failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
-      setTimeout(() => setExportMessage(''), 5000)
-    }
-  }
-
-  // 处理复制数据
-  const handleCopyData = async () => {
-    try {
-      await copyHighlightsData()
-      setExportMessage('✅ Data copied to clipboard!')
       setTimeout(() => setExportMessage(''), 3000)
     }
     catch (error) {
@@ -80,6 +73,19 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
     catch (error) {
       setImportMessage(`❌ Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
       setTimeout(() => setImportMessage(''), 5000)
+    }
+  }
+
+  // 处理导出到 Anki
+  const handleExportToAnki = async () => {
+    try {
+      const result = await exportHighlightsWithExplanations()
+      setExportMessage(`✅ Successfully exported ${result.added} cards to Anki!`)
+      setTimeout(() => setExportMessage(''), 3000)
+    }
+    catch (error) {
+      setExportMessage(`❌ Anki export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setTimeout(() => setExportMessage(''), 5000)
     }
   }
 
@@ -274,7 +280,7 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
               </div>
               {highlights.length > 0
                 ? (
-                    <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                    <div className="space-y-1.5 overflow-y-auto max-h-120">
                       {highlights.map((highlight) => {
                         const data = highlightData.find(d => d.id === highlight.id)
                         return (
@@ -359,27 +365,26 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
                     </button>
                     <button
                       type="button"
-                      onClick={handleCopyData}
-                      disabled={isExporting}
-                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-green-50 text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
-                      title="Copy highlights data to clipboard as JSON"
-                    >
-                      <Database size={12} />
-                      {isExporting ? 'Copying...' : 'Copy Data'}
-                    </button>
-                  </div>
-
-                  {/* Import Button */}
-                  <div>
-                    <button
-                      type="button"
                       onClick={handleImportFromClipboard}
                       disabled={isImporting}
-                      className="w-full flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-green-50 text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
                       title="Import AI explanations from clipboard"
                     >
                       <Clipboard size={12} />
                       {isImporting ? 'Importing...' : 'Import from Clipboard'}
+                    </button>
+                  </div>
+
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleExportToAnki}
+                      disabled={isExportingToAnki}
+                      className="w-full flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                      title="Export highlights with explanations to Anki"
+                    >
+                      <Database size={12} />
+                      {isExportingToAnki ? 'Exporting...' : 'Export to Anki'}
                     </button>
                   </div>
                 </div>

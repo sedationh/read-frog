@@ -1,5 +1,6 @@
 import type { HighlightData, HighlightState } from '../types/highlight'
 import { useCallback, useEffect, useState } from 'react'
+
 import {
   checkHighlightConflicts,
   clearHighlightsFromStorage,
@@ -280,7 +281,7 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
   }, [isActive])
 
   // 复制 highlights 为 AI prompt 到剪贴板
-  const copyPrompt = useCallback(async (sourceLang: string = 'English', targetLang: string = 'Chinese') => {
+  const copyPrompt = useCallback(async () => {
     setIsExporting(true)
     try {
       const stored = await loadHighlightsFromStorage()
@@ -289,7 +290,7 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
       }
 
       const promptExport = exportHighlightsAsPrompt(stored, containerSelector)
-      await copyPromptToClipboard(promptExport, sourceLang, targetLang)
+      await copyPromptToClipboard(promptExport)
 
       return promptExport
     }
