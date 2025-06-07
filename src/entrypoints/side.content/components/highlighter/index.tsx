@@ -14,7 +14,7 @@ interface HighlighterSectionProps {
 }
 
 export function HighlighterSection({ className }: HighlighterSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(true)
 
   const {
     isActive,
