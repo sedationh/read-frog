@@ -157,8 +157,13 @@ export function convertHighlightToAnkiNote(
   highlight: HighlightData,
   options: HighlightToAnkiOptions,
 ): AnkiNote {
-  // 构建问题（高亮的文本，加粗显示）
-  const boldContext = `<b>${highlight.text}</b>`
+  // 构建问题（在上下文中高亮文本，加粗显示）
+  const boldContext = highlight.context
+    ? highlight.context.replace(
+        new RegExp(highlight.text, 'gi'),
+        `<b>$&</b>`,
+      )
+    : `<b>${highlight.text}</b>`
 
   // 构建答案
   let answer = ''
