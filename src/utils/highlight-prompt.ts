@@ -5,22 +5,60 @@ import type {
   HighlightPromptData,
   HighlightPromptExport,
 } from '../types/highlight'
+import nlp from 'compromise'
 
 /**
- * 获取文本节点的上下文（前后各50个字符）
+ * 获取文本节点的上下文（使用自然语言处理）
  */
-function getTextContext(element: HTMLElement, targetText: string, contextLength: number = 50): string {
-  const container = element.closest('body') || document.body
-  const fullText = container.textContent || ''
+function getTextContext(element: HTMLElement, targetText: string): string {
+  let container: Element | null = null
 
-  const index = fullText.indexOf(targetText)
-  if (index === -1)
+  // Try to get container from range's common ancestor
+  try {
+    const range = document.createRange()
+    const walker = document.createTreeWalker(
+      element,
+      NodeFilter.SHOW_TEXT,
+      null,
+    )
+
+    let textNode = walker.nextNode()
+    while (textNode) {
+      if (textNode.textContent?.includes(targetText)) {
+        range.selectNodeContents(textNode)
+        container = range.commonAncestorContainer as Element
+        if (container.nodeType === Node.TEXT_NODE) {
+          container = container.parentElement
+        }
+        break
+      }
+      textNode = walker.nextNode()
+    }
+  }
+  catch (error) {
+    console.warn('Failed to get range common ancestor:', error)
+  }
+
+  // Fallback to closest method if range approach fails
+  if (!container) {
+    container = element.closest('p, div, h1, h2, h3, h4, h5, h6, pre, td, body')
+  }
+
+  if (!container)
     return targetText
 
-  const start = Math.max(0, index - contextLength)
-  const end = Math.min(fullText.length, index + targetText.length + contextLength)
+  // Get the full context and split into sentences
+  const fullContext = container.textContent?.trim() || ''
+  const doc = nlp(fullContext)
 
-  return fullText.slice(start, end).trim()
+  // Get all sentences that contain the highlight text
+  const sentences = doc
+    .sentences()
+    .filter((s: any) => s.text().includes(targetText))
+    .out('array') as string[]
+
+  const context = sentences.join(' ')
+  return context || targetText
 }
 
 /**
