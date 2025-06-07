@@ -12,6 +12,7 @@ import { useExtractContent } from '@/hooks/read/extract'
 import { useExplainArticle } from '@/hooks/read/read'
 
 import { progressAtom, readStateAtom } from '../../atoms'
+import { HighlighterSection } from '../highlighter'
 import Explanation from './explanation'
 
 export default function Content() {
@@ -113,6 +114,9 @@ export default function Content() {
   }
   return (
     <>
+      {/* Highlighter Section */}
+      <HighlighterSection />
+
       {explainDataList.length > 0
         && explainDataList[explainDataList.length - 1]
         ? (
