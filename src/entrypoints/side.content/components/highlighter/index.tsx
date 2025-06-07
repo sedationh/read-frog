@@ -2,6 +2,7 @@ import type { HighlightState } from '@/types/highlight'
 import { kebabCase } from 'case-anything'
 import { Clipboard, Database, FileText, Highlighter, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { useAnki } from '@/hooks/useAnki'
 import { useHighlighter } from '@/hooks/useHighlighter'
 import { APP_NAME } from '@/utils/constants/app'
@@ -38,8 +39,6 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
     containerSelector: 'body',
   })
 
-  const [exportMessage, setExportMessage] = useState('')
-  const [importMessage, setImportMessage] = useState('')
   const [showExplanations, setShowExplanations] = useState(true)
 
   // Anki integration
@@ -52,12 +51,10 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
   const handleCopyPrompt = async () => {
     try {
       await copyPrompt()
-      setExportMessage('✅ Prompt copied to clipboard!')
-      setTimeout(() => setExportMessage(''), 3000)
+      toast.success('Prompt copied to clipboard!')
     }
     catch (error) {
-      setExportMessage(`❌ Copy failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
-      setTimeout(() => setExportMessage(''), 5000)
+      toast.error(`Copy failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -65,14 +62,12 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
   const handleImportFromClipboard = async () => {
     try {
       const count = await importExplanationsFromClipboard()
-      setImportMessage(`✅ Successfully imported ${count} explanations from clipboard!`)
-      setTimeout(() => setImportMessage(''), 3000)
+      toast.success(`Successfully imported ${count} explanations from clipboard!`)
       // 刷新数据显示
       await getHighlightData()
     }
     catch (error) {
-      setImportMessage(`❌ Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
-      setTimeout(() => setImportMessage(''), 5000)
+      toast.error(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -80,8 +75,7 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
   const handleExportToAnki = async () => {
     try {
       const result = await exportHighlightsWithExplanations()
-      setExportMessage(`✅ Successfully exported ${result.added} cards to Anki! Exported highlights have been removed.`)
-      setTimeout(() => setExportMessage(''), 3000)
+      toast.success(`Successfully exported ${result.added} cards to Anki! Exported highlights have been removed.`)
 
       // 刷新高亮显示数据
       await getHighlightData()
@@ -89,8 +83,7 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
       location.reload()
     }
     catch (error) {
-      setExportMessage(`❌ Anki export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
-      setTimeout(() => setExportMessage(''), 5000)
+      toast.error(`Anki export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -221,18 +214,6 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
                 ×
               </button>
             </div>
-          </div>
-        )}
-
-        {/* Export/Import Messages */}
-        {exportMessage && (
-          <div className="p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-            <span className="text-blue-800">{exportMessage}</span>
-          </div>
-        )}
-        {importMessage && (
-          <div className="p-2 bg-green-50 border border-green-200 rounded text-xs">
-            <span className="text-green-800">{importMessage}</span>
           </div>
         )}
 
