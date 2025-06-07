@@ -12,6 +12,13 @@ import {
   removeHighlightElement,
   saveHighlightsToStorage,
 } from '../utils/highlight'
+import {
+  copyHighlightsToClipboard,
+  copyPromptToClipboard,
+  exportHighlightsAsPrompt,
+  importHighlightExplanations,
+  readExplanationFromClipboard,
+} from '../utils/highlight-prompt'
 
 export interface UseHighlighterOptions {
   enabled?: boolean
@@ -32,6 +39,9 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
   const [highlights, setHighlights] = useState<HighlightState[]>([])
   const [highlightColor, setHighlightColor] = useState(DEFAULT_HIGHLIGHT_COLOR)
   const [conflictMessage, setConflictMessage] = useState('')
+  const [highlightData, setHighlightData] = useState<HighlightData[]>([])
+  const [isExporting, setIsExporting] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
 
   // 创建单元素高亮
   const createSingleElementHighlight = useCallback((
@@ -269,6 +279,84 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
     setIsActive(!isActive)
   }, [isActive])
 
+  // 复制 highlights 为 AI prompt 到剪贴板
+  const copyPrompt = useCallback(async (sourceLang: string = 'English', targetLang: string = 'Chinese') => {
+    setIsExporting(true)
+    try {
+      const stored = await loadHighlightsFromStorage()
+      if (stored.length === 0) {
+        throw new Error('No highlights found to export')
+      }
+
+      const promptExport = exportHighlightsAsPrompt(stored, containerSelector)
+      await copyPromptToClipboard(promptExport, sourceLang, targetLang)
+
+      return promptExport
+    }
+    catch (error) {
+      console.error('Failed to copy prompt:', error)
+      throw error
+    }
+    finally {
+      setIsExporting(false)
+    }
+  }, [containerSelector])
+
+  // 复制 highlights 数据到剪贴板
+  const copyHighlightsData = useCallback(async () => {
+    setIsExporting(true)
+    try {
+      const stored = await loadHighlightsFromStorage()
+      if (stored.length === 0) {
+        throw new Error('No highlights found to export')
+      }
+
+      await copyHighlightsToClipboard(stored)
+    }
+    catch (error) {
+      console.error('Failed to copy highlights data:', error)
+      throw error
+    }
+    finally {
+      setIsExporting(false)
+    }
+  }, [])
+
+  // 从剪贴板导入 AI 解释结果
+  const importExplanationsFromClipboard = useCallback(async () => {
+    setIsImporting(true)
+    try {
+      const explanations = await readExplanationFromClipboard()
+      const stored = await loadHighlightsFromStorage()
+
+      const updatedHighlights = importHighlightExplanations(explanations, stored)
+      await saveHighlightsToStorage(updatedHighlights)
+
+      setHighlightData(updatedHighlights)
+
+      // 重新恢复 highlights 以显示更新的数据
+      if (isActive) {
+        restoreHighlights(updatedHighlights)
+      }
+
+      return explanations.length
+    }
+    catch (error) {
+      console.error('Failed to import explanations:', error)
+      throw error
+    }
+    finally {
+      setIsImporting(false)
+    }
+  }, [isActive, restoreHighlights])
+
+  // 获取当前 highlight 数据（包含解释）
+  const getHighlightData = useCallback(async () => {
+    const stored = await loadHighlightsFromStorage()
+    setHighlightData(stored)
+    return stored
+  }, [])
+
   // 页面加载时恢复高亮数据
   useEffect(() => {
     if (isActive) {
@@ -289,11 +377,18 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
     highlights,
     highlightColor,
     conflictMessage,
+    highlightData,
+    isExporting,
+    isImporting,
     createHighlight,
     removeHighlight,
     removeAllHighlights,
     changeHighlightColor,
     toggleActive,
     setConflictMessage,
+    copyPrompt,
+    copyHighlightsData,
+    importExplanationsFromClipboard,
+    getHighlightData,
   }
 }

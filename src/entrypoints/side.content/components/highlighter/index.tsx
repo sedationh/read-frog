@@ -1,7 +1,7 @@
 import type { HighlightState } from '@/types/highlight'
 import { kebabCase } from 'case-anything'
-import { Highlighter, Trash2 } from 'lucide-react'
-import { useEffect } from 'react'
+import { Clipboard, Database, FileText, Highlighter, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useHighlighter } from '@/hooks/useHighlighter'
 import { APP_NAME } from '@/utils/constants/app'
 import { COLOR_OPTIONS } from '@/utils/highlight'
@@ -20,16 +20,75 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
     highlights,
     highlightColor,
     conflictMessage,
+    highlightData,
+    isExporting,
+    isImporting,
     createHighlight,
     removeHighlight,
     removeAllHighlights,
     changeHighlightColor,
     toggleActive,
     setConflictMessage,
+    copyPrompt,
+    copyHighlightsData,
+    importExplanationsFromClipboard,
+    getHighlightData,
   } = useHighlighter({
     enabled: true,
     containerSelector: 'body',
   })
+
+  const [exportMessage, setExportMessage] = useState('')
+  const [importMessage, setImportMessage] = useState('')
+  const [showExplanations, setShowExplanations] = useState(false)
+
+  // 处理复制 Prompt
+  const handleCopyPrompt = async () => {
+    try {
+      await copyPrompt()
+      setExportMessage('✅ Prompt copied to clipboard!')
+      setTimeout(() => setExportMessage(''), 3000)
+    }
+    catch (error) {
+      setExportMessage(`❌ Copy failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setTimeout(() => setExportMessage(''), 5000)
+    }
+  }
+
+  // 处理复制数据
+  const handleCopyData = async () => {
+    try {
+      await copyHighlightsData()
+      setExportMessage('✅ Data copied to clipboard!')
+      setTimeout(() => setExportMessage(''), 3000)
+    }
+    catch (error) {
+      setExportMessage(`❌ Copy failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setTimeout(() => setExportMessage(''), 5000)
+    }
+  }
+
+  // 处理从剪贴板导入解释
+  const handleImportFromClipboard = async () => {
+    try {
+      const count = await importExplanationsFromClipboard()
+      setImportMessage(`✅ Successfully imported ${count} explanations from clipboard!`)
+      setTimeout(() => setImportMessage(''), 3000)
+      // 刷新数据显示
+      await getHighlightData()
+    }
+    catch (error) {
+      setImportMessage(`❌ Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setTimeout(() => setImportMessage(''), 5000)
+    }
+  }
+
+  // 加载解释数据
+  useEffect(() => {
+    if (isActive && highlights.length > 0) {
+      getHighlightData()
+    }
+  }, [isActive, highlights.length, getHighlightData])
 
   // 滚动到高亮位置
   const scrollToHighlight = (highlight: HighlightState) => {
@@ -154,6 +213,18 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
           </div>
         )}
 
+        {/* Export/Import Messages */}
+        {exportMessage && (
+          <div className="p-2 bg-blue-50 border border-blue-200 rounded text-xs">
+            <span className="text-blue-800">{exportMessage}</span>
+          </div>
+        )}
+        {importMessage && (
+          <div className="p-2 bg-green-50 border border-green-200 rounded text-xs">
+            <span className="text-green-800">{importMessage}</span>
+          </div>
+        )}
+
         {isActive && (
           <>
             {/* Color Picker */}
@@ -180,39 +251,86 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
 
             {/* Highlights List */}
             <div>
-              <h4 className="text-xs font-medium text-muted-foreground mb-2">
-                Highlights (
-                {highlights.length}
-                )
-              </h4>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs font-medium text-muted-foreground">
+                  Highlights (
+                  {highlights.length}
+                  )
+                </h4>
+                {highlights.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowExplanations(!showExplanations)}
+                      className="px-2 py-1 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                      title="Toggle explanations view"
+                    >
+                      {showExplanations ? 'Hide' : 'Show'}
+                      {' '}
+                      Explanations
+                    </button>
+                  </div>
+                )}
+              </div>
               {highlights.length > 0
                 ? (
                     <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                      {highlights.map(highlight => (
-                        <div
-                          key={highlight.id}
-                          className="flex items-center justify-between p-2 bg-muted/50 rounded text-xs group"
-                        >
-                          <button
-                            type="button"
-                            onClick={() => scrollToHighlight(highlight)}
-                            className="flex-1 truncate text-left hover:text-blue-600 transition-colors cursor-pointer"
-                            title="Click to jump to highlight"
+                      {highlights.map((highlight) => {
+                        const data = highlightData.find(d => d.id === highlight.id)
+                        return (
+                          <div
+                            key={highlight.id}
+                            className="p-2 bg-muted/50 rounded text-xs group"
                           >
-                            "
-                            {highlight.text.length > 30 ? `${highlight.text.substring(0, 30)}...` : highlight.text}
-                            "
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => removeHighlight(highlight.id)}
-                            className="ml-2 p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Remove highlight"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      ))}
+                            <div className="flex items-center justify-between">
+                              <button
+                                type="button"
+                                onClick={() => scrollToHighlight(highlight)}
+                                className="flex-1 truncate text-left hover:text-blue-600 transition-colors cursor-pointer"
+                                title="Click to jump to highlight"
+                              >
+                                "
+                                {highlight.text.length > 30 ? `${highlight.text.substring(0, 30)}...` : highlight.text}
+                                "
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removeHighlight(highlight.id)}
+                                className="ml-2 p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Remove highlight"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                            {showExplanations && data?.explanation && (
+                              <div className="mt-2 p-2 bg-white/80 rounded border border-gray-200">
+                                <div className="text-xs text-gray-700 mb-1">
+                                  <strong>Explanation:</strong>
+                                  {' '}
+                                  {data.explanation}
+                                </div>
+                                {data.examples && data.examples.length > 0 && (
+                                  <div className="text-xs text-gray-600 mb-1">
+                                    <strong>Examples:</strong>
+                                    <ul className="list-disc list-inside ml-2 mt-1">
+                                      {data.examples.slice(0, 2).map((example, idx) => (
+                                        <li key={idx}>{example}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                {data.pronunciation && (
+                                  <div className="text-xs text-gray-600">
+                                    <strong>Pronunciation:</strong>
+                                    {' '}
+                                    {data.pronunciation}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   )
                 : (
@@ -221,6 +339,52 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
                     </p>
                   )}
             </div>
+
+            {/* Export/Import Section */}
+            {highlights.length > 0 && (
+              <div>
+                <h4 className="text-xs font-medium text-muted-foreground mb-2">AI Explanations</h4>
+                <div className="space-y-2">
+                  {/* Copy Buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleCopyPrompt}
+                      disabled={isExporting}
+                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                      title="Copy AI prompt to clipboard for generating explanations"
+                    >
+                      <FileText size={12} />
+                      {isExporting ? 'Copying...' : 'Copy Prompt'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCopyData}
+                      disabled={isExporting}
+                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-green-50 text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                      title="Copy highlights data to clipboard as JSON"
+                    >
+                      <Database size={12} />
+                      {isExporting ? 'Copying...' : 'Copy Data'}
+                    </button>
+                  </div>
+
+                  {/* Import Button */}
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleImportFromClipboard}
+                      disabled={isImporting}
+                      className="w-full flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                      title="Import AI explanations from clipboard"
+                    >
+                      <Clipboard size={12} />
+                      {isImporting ? 'Importing...' : 'Import from Clipboard'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Instructions */}
             <div className="text-xs text-muted-foreground p-2 bg-muted/30 rounded">
