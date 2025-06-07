@@ -80,8 +80,13 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
   const handleExportToAnki = async () => {
     try {
       const result = await exportHighlightsWithExplanations()
-      setExportMessage(`✅ Successfully exported ${result.added} cards to Anki!`)
+      setExportMessage(`✅ Successfully exported ${result.added} cards to Anki! Exported highlights have been removed.`)
       setTimeout(() => setExportMessage(''), 3000)
+
+      // 刷新高亮显示数据
+      await getHighlightData()
+
+      location.reload()
     }
     catch (error) {
       setExportMessage(`❌ Anki export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)

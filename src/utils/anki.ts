@@ -240,11 +240,12 @@ export async function exportHighlightsToAnki(
   highlights: HighlightData[],
   options: HighlightToAnkiOptions,
   config?: AnkiConnectConfig,
-): Promise<{ added: number, failed: number, errors: string[] }> {
+): Promise<{ added: number, failed: number, errors: string[], exportedHighlightIds: string[] }> {
+  // 筛选有解释的高亮
+  const highlightsWithExplanations = highlights.filter(h => h.explanation)
+
   // 转换为 Anki 卡片
-  const ankiNotes = highlights
-    .filter(h => h.explanation) // 只处理有解释的高亮
-    .map(h => convertHighlightToAnkiNote(h, options))
+  const ankiNotes = highlightsWithExplanations.map(h => convertHighlightToAnkiNote(h, options))
 
   if (ankiNotes.length === 0) {
     throw new Error('No highlights with explanations found to export to Anki.')
@@ -256,10 +257,19 @@ export async function exportHighlightsToAnki(
     const added = results.filter(id => id !== null).length
     const failed = results.length - added
 
+    // 获取成功导出的高亮 ID
+    const exportedHighlightIds: string[] = []
+    results.forEach((result, index) => {
+      if (result !== null) {
+        exportedHighlightIds.push(highlightsWithExplanations[index].id)
+      }
+    })
+
     return {
       added,
       failed,
       errors: [],
+      exportedHighlightIds,
     }
   }
   catch (error) {

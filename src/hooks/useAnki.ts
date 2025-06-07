@@ -10,7 +10,7 @@ import {
   loadAnkiConfig,
   saveAnkiConfig,
 } from '@/utils/anki'
-import { loadHighlightsFromStorage } from '@/utils/highlight'
+import { loadHighlightsFromStorage, saveHighlightsToStorage } from '@/utils/highlight'
 
 export interface UseAnkiOptions {
   autoConnect?: boolean
@@ -114,6 +114,15 @@ export function useAnki(options: UseAnkiOptions = {}) {
 
       // 执行导出
       const result = await exportHighlightsToAnki(highlightsToExport, config)
+
+      // 如果有成功导出的高亮，从存储中删除它们
+      if (result.exportedHighlightIds.length > 0) {
+        const remainingHighlights = highlightsToExport.filter(
+          h => !result.exportedHighlightIds.includes(h.id),
+        )
+        await saveHighlightsToStorage(remainingHighlights)
+      }
+
       return result
     }
     catch (error) {
