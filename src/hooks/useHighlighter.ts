@@ -172,6 +172,21 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
         const endNode = getTextNodeByPath(data.endPath, container as Element)
 
         if (startNode && endNode) {
+          // 验证偏移量是否有效
+          const startTextLength = startNode.textContent?.length || 0
+          const endTextLength = endNode.textContent?.length || 0
+
+          // 检查偏移量是否超出文本节点长度
+          if (data.startOffset > startTextLength) {
+            console.warn(`Failed to restore highlight ${data.id}: start offset ${data.startOffset} exceeds node length ${startTextLength}`)
+            continue
+          }
+
+          if (data.endOffset > endTextLength) {
+            console.warn(`Failed to restore highlight ${data.id}: end offset ${data.endOffset} exceeds node length ${endTextLength}`)
+            continue
+          }
+
           const range = document.createRange()
           range.setStart(startNode, data.startOffset)
           range.setEnd(endNode, data.endOffset)
@@ -470,7 +485,19 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
 
       return () => clearTimeout(timer)
     }
-  }, [isActive, restoreHighlights])
+    else {
+      highlights.forEach((highlight) => {
+        if (highlight.segments && highlight.segments.length > 0) {
+          highlight.segments.forEach((segment) => {
+            removeHighlightElement(segment)
+          })
+        }
+        else {
+          removeHighlightElement(highlight.element)
+        }
+      })
+    }
+  }, [isActive, restoreHighlights, highlights])
 
   return {
     isActive,
