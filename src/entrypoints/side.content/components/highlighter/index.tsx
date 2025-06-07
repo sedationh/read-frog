@@ -1,6 +1,6 @@
 import type { HighlightState } from '@/types/highlight'
 import { kebabCase } from 'case-anything'
-import { Clipboard, Database, FileText, Highlighter, Trash2 } from 'lucide-react'
+import { Clipboard, Database, FileText, Highlighter, Sparkles, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useAnki } from '@/hooks/useAnki'
@@ -25,6 +25,7 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
     highlightData,
     isExporting,
     isImporting,
+    isGenerating,
     createHighlight,
     removeHighlight,
     removeAllHighlights,
@@ -33,6 +34,7 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
     setConflictMessage,
     copyPrompt,
     importExplanationsFromClipboard,
+    generateExplanations,
     getHighlightData,
   } = useHighlighter({
     enabled: true,
@@ -68,6 +70,19 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
     }
     catch (error) {
       toast.error(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  // 处理生成解释
+  const handleGenerateExplanations = async () => {
+    try {
+      const count = await generateExplanations()
+      toast.success(`Successfully generated explanations for ${count} highlights!`)
+      // 刷新数据显示
+      await getHighlightData()
+    }
+    catch (error) {
+      toast.error(`Generate explanations failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -361,12 +376,23 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
                     </button>
                   </div>
 
-                  <div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleGenerateExplanations}
+                      disabled={isGenerating}
+                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                      title="Generate explanations using configured AI model"
+                    >
+                      <Sparkles size={12} />
+                      {isGenerating ? 'Generating...' : 'Generate Explanations'}
+                    </button>
+
                     <button
                       type="button"
                       onClick={handleExportToAnki}
                       disabled={isExportingToAnki}
-                      className="w-full flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
                       title="Export highlights with explanations to Anki"
                     >
                       <Database size={12} />

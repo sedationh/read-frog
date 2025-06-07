@@ -1,3 +1,4 @@
+import type { Config } from '../types/config/config'
 import type { HighlightData, HighlightState } from '../types/highlight'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -17,6 +18,7 @@ import {
   copyHighlightsToClipboard,
   copyPromptToClipboard,
   exportHighlightsAsPrompt,
+  generateAIPrompt,
   getTextContext,
   importHighlightExplanations,
   readExplanationFromClipboard,
@@ -44,6 +46,7 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
   const [highlightData, setHighlightData] = useState<HighlightData[]>([])
   const [isExporting, setIsExporting] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
 
   // 创建单元素高亮
   const createSingleElementHighlight = useCallback((
@@ -362,6 +365,91 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
     }
   }, [isActive, restoreHighlights])
 
+  // 使用配置的AI模型直接生成解释
+  const generateExplanations = useCallback(async () => {
+    setIsGenerating(true)
+    try {
+      const stored = await loadHighlightsFromStorage()
+      if (stored.length === 0) {
+        throw new Error('No highlights found to generate explanations')
+      }
+
+      // 生成 AI prompt
+      const promptExport = exportHighlightsAsPrompt(stored, containerSelector)
+      const aiPrompt = generateAIPrompt(promptExport)
+
+      // 获取配置
+      const { CONFIG_STORAGE_KEY } = await import('../utils/constants/config')
+      const config = await storage.getItem<Config>(`local:${CONFIG_STORAGE_KEY}`)
+
+      if (!config?.read?.provider || !config.read.models[config.read.provider]) {
+        throw new Error('No AI model configured. Please set up read provider in options.')
+      }
+
+      const provider = config.read.provider
+      const modelConfig = config.read.models[provider]
+
+      if (!modelConfig) {
+        throw new Error('No model configuration found for the selected provider')
+      }
+
+      const modelString = modelConfig.isCustomModel ? modelConfig.customModel : modelConfig.model
+
+      if (!modelString) {
+        throw new Error('No model string available for explanation generation')
+      }
+
+      // 导入 AI 相关模块
+      const { generateText } = await import('ai')
+      const { getReadModel } = await import('../utils/provider')
+
+      const model = await getReadModel(provider, modelString)
+
+      // 调用 AI 生成解释
+      const { text } = await generateText({
+        model,
+        prompt: aiPrompt,
+      })
+
+      // 解析 AI 返回的 JSON 数据
+      let explanations
+      try {
+        // 尝试直接解析
+        explanations = JSON.parse(text)
+      }
+      catch {
+        // 尝试从 markdown 代码块中提取
+        const jsonMatch = text.match(/```json([\s\S]*?)```/)
+        if (jsonMatch) {
+          explanations = JSON.parse(jsonMatch[1].trim())
+        }
+        else {
+          throw new Error('Failed to parse AI response as JSON')
+        }
+      }
+
+      // 导入解释数据
+      const updatedHighlights = importHighlightExplanations(explanations, stored)
+      await saveHighlightsToStorage(updatedHighlights)
+
+      setHighlightData(updatedHighlights)
+
+      // 重新恢复 highlights 以显示更新的数据
+      if (isActive) {
+        restoreHighlights(updatedHighlights)
+      }
+
+      return explanations.length
+    }
+    catch (error) {
+      console.error('Failed to generate explanations:', error)
+      throw error
+    }
+    finally {
+      setIsGenerating(false)
+    }
+  }, [containerSelector, isActive, restoreHighlights])
+
   // 获取当前 highlight 数据（包含解释）
   const getHighlightData = useCallback(async () => {
     const stored = await loadHighlightsFromStorage()
@@ -392,6 +480,7 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
     highlightData,
     isExporting,
     isImporting,
+    isGenerating,
     createHighlight,
     removeHighlight,
     removeAllHighlights,
@@ -401,6 +490,7 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
     copyPrompt,
     copyHighlightsData,
     importExplanationsFromClipboard,
+    generateExplanations,
     getHighlightData,
   }
 }
