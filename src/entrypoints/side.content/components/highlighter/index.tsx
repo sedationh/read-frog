@@ -1,3 +1,4 @@
+import type { HighlightState } from '@/types/highlight'
 import { kebabCase } from 'case-anything'
 import { Highlighter, Trash2 } from 'lucide-react'
 import { useEffect } from 'react'
@@ -29,6 +30,36 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
     enabled: true,
     containerSelector: 'body',
   })
+
+  // 滚动到高亮位置
+  const scrollToHighlight = (highlight: HighlightState) => {
+    const element = highlight.element
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest',
+      })
+
+      // 获取所有需要高亮的元素（包括segments）
+      const elementsToHighlight = highlight.segments && highlight.segments.length > 0
+        ? highlight.segments
+        : [element]
+
+      // 添加临时高亮效果到所有元素
+      elementsToHighlight.forEach((el) => {
+        el.style.boxShadow = '0 0 8px rgba(59, 130, 246, 0.5)'
+        el.style.transition = 'box-shadow 0.3s ease'
+      })
+
+      setTimeout(() => {
+        elementsToHighlight.forEach((el) => {
+          el.style.boxShadow = ''
+          el.style.transition = ''
+        })
+      }, 2000)
+    }
+  }
 
   // 监听文本选择事件
   useEffect(() => {
@@ -160,17 +191,22 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
                       {highlights.map(highlight => (
                         <div
                           key={highlight.id}
-                          className="flex items-center justify-between p-2 bg-muted/50 rounded text-xs"
+                          className="flex items-center justify-between p-2 bg-muted/50 rounded text-xs group"
                         >
-                          <span className="flex-1 truncate">
+                          <button
+                            type="button"
+                            onClick={() => scrollToHighlight(highlight)}
+                            className="flex-1 truncate text-left hover:text-blue-600 transition-colors cursor-pointer"
+                            title="Click to jump to highlight"
+                          >
                             "
                             {highlight.text.length > 30 ? `${highlight.text.substring(0, 30)}...` : highlight.text}
                             "
-                          </span>
+                          </button>
                           <button
                             type="button"
                             onClick={() => removeHighlight(highlight.id)}
-                            className="ml-2 p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+                            className="ml-2 p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                             title="Remove highlight"
                           >
                             <Trash2 size={12} />
@@ -188,7 +224,7 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
 
             {/* Instructions */}
             <div className="text-xs text-muted-foreground p-2 bg-muted/30 rounded">
-              💡 Select any text on the page to create highlights. Highlights are saved automatically.
+              💡 Select text to highlight. Click highlighted text to jump to its location.
             </div>
           </>
         )}
