@@ -17,6 +17,7 @@ import {
   copyHighlightsToClipboard,
   copyPromptToClipboard,
   exportHighlightsAsPrompt,
+  getTextContext,
   importHighlightExplanations,
   readExplanationFromClipboard,
 } from '../utils/highlight-prompt'
@@ -204,6 +205,15 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
       return
     }
 
+    // 获取上下文
+    let context: string = text
+    try {
+      context = getTextContext(containerDom as HTMLElement, text)
+    }
+    catch (error) {
+      console.warn('Failed to get context for highlight:', error)
+    }
+
     const originalData: HighlightData = {
       id: highlightId,
       text,
@@ -215,6 +225,7 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
       endPath: getTextNodePath(range.endContainer, containerDom as Element),
       endOffset: range.endOffset,
       isSegmented: range.startContainer !== range.endContainer,
+      context, // 在创建时就获取上下文
     }
 
     createHighlightFromRange(range, text, highlightColor, highlightId)

@@ -10,7 +10,7 @@ import nlp from 'compromise'
 /**
  * 获取文本节点的上下文（使用自然语言处理）
  */
-function getTextContext(element: HTMLElement, targetText: string): string {
+export function getTextContext(element: HTMLElement, targetText: string): string {
   let container: Element | null = null
 
   // Try to get container from range's common ancestor
@@ -66,24 +66,8 @@ function getTextContext(element: HTMLElement, targetText: string): string {
  */
 export function exportHighlightsAsPrompt(highlights: HighlightData[], containerSelector: string = 'body'): HighlightPromptExport {
   const promptData: HighlightPromptData[] = highlights.map((highlight) => {
-    // 尝试获取更丰富的上下文
-    let context = highlight.context || highlight.text
-
-    // 如果没有存储的上下文，尝试从页面获取
-    if (!highlight.context) {
-      try {
-        const container = document.querySelector(containerSelector)
-        if (container) {
-          const elements = container.querySelectorAll(`[data-highlight-id="${highlight.id}"]`)
-          if (elements.length > 0) {
-            context = getTextContext(elements[0] as HTMLElement, highlight.text)
-          }
-        }
-      }
-      catch (error) {
-        console.warn('Failed to get context for highlight:', highlight.id, error)
-      }
-    }
+    // 使用已存储的上下文，如果没有则回退到高亮文本
+    const context = highlight.context || highlight.text
 
     return {
       highlight: highlight.text,
