@@ -45,7 +45,6 @@ export function getTextNodeByPath(path: number[], container: Element): Node | nu
 export function createHighlightElement(color: string, id: string, isSegment: boolean = false, segmentIndex?: number): HTMLSpanElement {
   const span = document.createElement('span')
   span.style.backgroundColor = color
-  span.style.border = '1px solid #ffeaa7'
   span.style.borderRadius = '2px'
   span.style.padding = '0 1px'
   span.className = 'read-frog-highlight-mark'

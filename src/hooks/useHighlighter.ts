@@ -75,7 +75,7 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
       NodeFilter.SHOW_TEXT,
       {
         acceptNode(node) {
-          return range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+          return range.intersectsNode(node) && !!node?.textContent?.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
         },
       },
     )
@@ -267,10 +267,7 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
   // 切换扩展状态
   const toggleActive = useCallback(() => {
     setIsActive(!isActive)
-    if (isActive) {
-      removeAllHighlights()
-    }
-  }, [isActive, removeAllHighlights])
+  }, [isActive])
 
   // 页面加载时恢复高亮数据
   useEffect(() => {

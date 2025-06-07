@@ -1,6 +1,6 @@
 import { kebabCase } from 'case-anything'
-import { Highlighter, RotateCcw, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Highlighter, Trash2 } from 'lucide-react'
+import { useEffect } from 'react'
 import { useHighlighter } from '@/hooks/useHighlighter'
 import { APP_NAME } from '@/utils/constants/app'
 import { COLOR_OPTIONS } from '@/utils/highlight'
@@ -14,8 +14,6 @@ interface HighlighterSectionProps {
 }
 
 export function HighlighterSection({ className }: HighlighterSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
-
   const {
     isActive,
     highlights,
@@ -68,11 +66,7 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
   return (
     <div className={cn('border-b border-border', className)}>
       {/* Header */}
-      <button
-        type="button"
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="flex w-full items-center justify-between p-3 text-left hover:bg-muted/50 transition-colors"
-      >
+      <div className="flex w-full items-center justify-between p-3">
         <div className="flex items-center gap-2">
           <Highlighter size={16} className="text-blue-500" />
           <span className="text-sm font-medium">Text Highlighter</span>
@@ -83,12 +77,19 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
           )}
         </div>
         <div className="flex items-center gap-2">
+          {highlights.length > 0 && (
+            <button
+              type="button"
+              onClick={removeAllHighlights}
+              className="flex items-center gap-1 px-2 py-1 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+            >
+              <Trash2 size={12} />
+              Clear All
+            </button>
+          )}
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              toggleActive()
-            }}
+            onClick={() => toggleActive()}
             className={cn(
               'px-2 py-1 text-xs font-medium rounded transition-colors',
               isActive
@@ -98,131 +99,100 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
           >
             {isActive ? 'ON' : 'OFF'}
           </button>
-          <span className={cn(
-            'text-xs transition-transform',
-            isExpanded ? 'rotate-90' : '',
-          )}
-          >
-            ▶
-          </span>
         </div>
-      </button>
+      </div>
 
-      {/* Expanded Content */}
-      {isExpanded && (
-        <div className="px-3 pb-3 space-y-3">
-          {/* Conflict Message */}
-          {conflictMessage && (
-            <div className="p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-yellow-800">
-                  ⚠️
-                  {conflictMessage}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setConflictMessage('')}
-                  className="text-yellow-600 hover:text-yellow-800"
-                >
-                  ×
-                </button>
+      {/* Content */}
+      <div className="px-3 pb-3 space-y-3">
+        {/* Conflict Message */}
+        {conflictMessage && (
+          <div className="p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-yellow-800">
+                ⚠️
+                {conflictMessage}
+              </span>
+              <button
+                type="button"
+                onClick={() => setConflictMessage('')}
+                className="text-yellow-600 hover:text-yellow-800"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isActive && (
+          <>
+            {/* Color Picker */}
+            <div>
+              <h4 className="text-xs font-medium text-muted-foreground mb-2">Colors</h4>
+              <div className="flex flex-wrap gap-1.5">
+                {COLOR_OPTIONS.map(({ color, name }) => (
+                  <button
+                    type="button"
+                    key={color}
+                    onClick={() => changeHighlightColor(color)}
+                    title={name}
+                    className={cn(
+                      'w-6 h-6 rounded border-2 transition-all hover:scale-110',
+                      highlightColor === color
+                        ? 'border-gray-600 ring-1 ring-gray-300'
+                        : 'border-gray-300 hover:border-gray-400',
+                    )}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
               </div>
             </div>
-          )}
 
-          {isActive && (
-            <>
-              {/* Color Picker */}
-              <div>
-                <h4 className="text-xs font-medium text-muted-foreground mb-2">Colors</h4>
-                <div className="flex flex-wrap gap-1.5">
-                  {COLOR_OPTIONS.map(({ color, name }) => (
-                    <button
-                      type="button"
-                      key={color}
-                      onClick={() => changeHighlightColor(color)}
-                      title={name}
-                      className={cn(
-                        'w-6 h-6 rounded border-2 transition-all hover:scale-110',
-                        highlightColor === color
-                          ? 'border-gray-600 ring-1 ring-gray-300'
-                          : 'border-gray-300 hover:border-gray-400',
-                      )}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Highlights List */}
-              <div>
-                <h4 className="text-xs font-medium text-muted-foreground mb-2">
-                  Highlights (
-                  {highlights.length}
-                  )
-                </h4>
-                {highlights.length > 0
-                  ? (
-                      <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                        {highlights.map(highlight => (
-                          <div
-                            key={highlight.id}
-                            className="flex items-center justify-between p-2 bg-muted/50 rounded text-xs"
+            {/* Highlights List */}
+            <div>
+              <h4 className="text-xs font-medium text-muted-foreground mb-2">
+                Highlights (
+                {highlights.length}
+                )
+              </h4>
+              {highlights.length > 0
+                ? (
+                    <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                      {highlights.map(highlight => (
+                        <div
+                          key={highlight.id}
+                          className="flex items-center justify-between p-2 bg-muted/50 rounded text-xs"
+                        >
+                          <span className="flex-1 truncate">
+                            "
+                            {highlight.text.length > 30 ? `${highlight.text.substring(0, 30)}...` : highlight.text}
+                            "
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeHighlight(highlight.id)}
+                            className="ml-2 p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+                            title="Remove highlight"
                           >
-                            <span className="flex-1 truncate">
-                              "
-                              {highlight.text.length > 30 ? `${highlight.text.substring(0, 30)}...` : highlight.text}
-                              "
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => removeHighlight(highlight.id)}
-                              className="ml-2 p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
-                              title="Remove highlight"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )
-                  : (
-                      <p className="text-xs text-muted-foreground italic py-2">
-                        Select text on the page to highlight
-                      </p>
-                    )}
-              </div>
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                : (
+                    <p className="text-xs text-muted-foreground italic py-2">
+                      Select text on the page to highlight
+                    </p>
+                  )}
+            </div>
 
-              {/* Actions */}
-              {highlights.length > 0 && (
-                <div className="flex gap-1.5 pt-2 border-t">
-                  <button
-                    type="button"
-                    onClick={removeAllHighlights}
-                    className="flex items-center gap-1 px-2 py-1 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
-                  >
-                    <Trash2 size={12} />
-                    Clear All
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => window.location.reload()}
-                    className="flex items-center gap-1 px-2 py-1 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
-                  >
-                    <RotateCcw size={12} />
-                    Test Restore
-                  </button>
-                </div>
-              )}
-
-              {/* Instructions */}
-              <div className="text-xs text-muted-foreground p-2 bg-muted/30 rounded">
-                💡 Select any text on the page to create highlights. Highlights are saved automatically.
-              </div>
-            </>
-          )}
-        </div>
-      )}
+            {/* Instructions */}
+            <div className="text-xs text-muted-foreground p-2 bg-muted/30 rounded">
+              💡 Select any text on the page to create highlights. Highlights are saved automatically.
+            </div>
+          </>
+        )}
+      </div>
     </div>
   )
 }
