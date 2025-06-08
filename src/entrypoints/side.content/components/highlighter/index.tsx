@@ -352,60 +352,58 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
             </div>
 
             {/* Export/Import Section */}
-            {highlights.length > 0 && (
-              <div>
-                <h4 className="text-xs font-medium text-muted-foreground mb-2">AI Explanations</h4>
-                <div className="space-y-2">
-                  {/* Copy Buttons */}
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={handleCopyPrompt}
-                      disabled={isExporting}
-                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
-                      title="Copy AI prompt to clipboard for generating explanations"
-                    >
-                      <FileText size={12} />
-                      {isExporting ? 'Copying...' : 'Copy Prompt'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleImportFromClipboard}
-                      disabled={isImporting}
-                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-green-50 text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
-                      title="Import AI explanations from clipboard"
-                    >
-                      <Clipboard size={12} />
-                      {isImporting ? 'Importing...' : 'Import from Clipboard'}
-                    </button>
-                  </div>
+            <div>
+              <h4 className="text-xs font-medium text-muted-foreground mb-2">AI Explanations</h4>
+              <div className="space-y-2">
+                {/* Copy Buttons */}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCopyPrompt}
+                    disabled={isExporting}
+                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                    title="Copy AI prompt to clipboard for generating explanations"
+                  >
+                    <FileText size={12} />
+                    {isExporting ? 'Copying...' : 'Copy Prompt'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleImportFromClipboard}
+                    disabled={isImporting}
+                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-green-50 text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                    title="Import AI explanations from clipboard"
+                  >
+                    <Clipboard size={12} />
+                    {isImporting ? 'Importing...' : 'Import from Clipboard'}
+                  </button>
+                </div>
 
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={handleGenerateExplanations}
-                      disabled={isGenerating}
-                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
-                      title="Generate explanations using configured AI model"
-                    >
-                      <Sparkles size={12} />
-                      {isGenerating ? 'Generating...' : 'Generate Explanations'}
-                    </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleGenerateExplanations}
+                    disabled={isGenerating}
+                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                    title="Generate explanations using configured AI model"
+                  >
+                    <Sparkles size={12} />
+                    {isGenerating ? 'Generating...' : 'Generate Explanations'}
+                  </button>
 
-                    <button
-                      type="button"
-                      onClick={handleExportToAnki}
-                      disabled={isExportingToAnki}
-                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
-                      title="Export highlights with explanations to Anki"
-                    >
-                      <Database size={12} />
-                      {isExportingToAnki ? 'Exporting...' : 'Export to Anki'}
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleExportToAnki}
+                    disabled={isExportingToAnki}
+                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                    title="Export highlights with explanations to Anki"
+                  >
+                    <Database size={12} />
+                    {isExportingToAnki ? 'Exporting...' : 'Export to Anki'}
+                  </button>
                 </div>
               </div>
-            )}
+            </div>
 
             {/* Instructions */}
             <div className="text-xs text-muted-foreground p-2 bg-muted/30 rounded">
