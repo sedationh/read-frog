@@ -197,7 +197,7 @@ export function convertHighlightToAnkiNote(
       相关知识: relatedKnowledge,
     },
     options: {
-      allowDuplicate: false,
+      allowDuplicate: true,
       duplicateScope: 'deck',
     },
   }
