@@ -164,22 +164,16 @@ export function convertHighlightToAnkiNote(
   // 构建答案
   let answer = ''
 
-  if (options.includePronunciation && highlight.pronunciation) {
-    answer += `${highlight.pronunciation}<br>`
-  }
+  answer += `${highlight.pronunciation}<br>`
 
-  if (highlight.explanation) {
-    answer += `${highlight.explanation}<br>`
-  }
+  answer += `${highlight.explanation}<br>`
 
-  if (options.includeExamples && highlight.examples && highlight.examples.length > 0) {
-    answer += highlight.examples
-      .map(example => `- ${example}`)
-      .join('<br>')
-  }
+  answer += highlight.examples
+    ?.map(example => `- ${example}`)
+    .join('<br>')
 
   // 构建相关知识（链接）
-  const relatedKnowledge = options.includeLink && highlight.link
+  const relatedKnowledge = highlight.link
     ? `<a href="${highlight.link}">${highlight.link}</a>`
     : ''
 
