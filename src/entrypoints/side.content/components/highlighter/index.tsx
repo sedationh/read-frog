@@ -44,12 +44,59 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
 
   const [showExplanations, setShowExplanations] = useState(true)
   const [highlightStats, setHighlightStats] = useState({ total: 0, highlight: 0, exportedToAnki: 0 })
+  const [colorFilter, setColorFilter] = useState<Set<string>>(new Set(['highlight']))
 
   // Anki integration
   const {
     isExporting: isExportingToAnki,
     exportHighlightsWithExplanations,
   } = useAnki()
+
+  // 颜色过滤切换功能
+  const toggleColorFilter = (status: string) => {
+    setColorFilter((prev) => {
+      const newFilter = new Set(prev)
+      if (newFilter.has(status)) {
+        newFilter.delete(status)
+      }
+      else {
+        newFilter.add(status)
+      }
+      // 如果全部取消选择，则默认选择 highlight
+      if (newFilter.size === 0) {
+        newFilter.add('highlight')
+      }
+      return newFilter
+    })
+  }
+
+  // 获取过滤后的高亮列表
+  const filteredHighlights = highlights.filter((highlight) => {
+    const data = highlightData.find(d => d.id === highlight.id)
+    const status = data?.status || 'highlight'
+    return colorFilter.has(status)
+  })
+
+  // 获取按状态分组的统计信息
+  const getStatusCounts = () => {
+    const counts = {
+      highlight: 0,
+      highlight_and_anki: 0,
+      interesting: 0,
+      no_highlight: 0,
+    }
+
+    highlightData.forEach((data) => {
+      const status = data.status || 'highlight'
+      if (status in counts) {
+        counts[status as keyof typeof counts]++
+      }
+    })
+
+    return counts
+  }
+
+  const statusCounts = getStatusCounts()
 
   // 处理复制 Prompt
   const handleCopyPrompt = async () => {
@@ -330,13 +377,13 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-xs font-medium text-muted-foreground">
                   Highlights (
-                  {highlightStats.highlight}
+                  {filteredHighlights.length}
                   {' '}
-                  active,
+                  of
                   {' '}
-                  {highlightStats.exportedToAnki}
+                  {highlights.length}
                   {' '}
-                  exported)
+                  shown)
                 </h4>
                 {highlights.length > 0 && (
                   <div className="flex items-center gap-1">
@@ -353,10 +400,70 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
                   </div>
                 )}
               </div>
-              {highlights.length > 0
+
+              {/* Color Filter Buttons */}
+              {highlights.length > 0 && (
+                <div className="mb-3">
+                  <div className="flex items-center gap-1 mb-1">
+                    <span className="text-xs text-muted-foreground">Filter by status:</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {COLOR_OPTIONS.filter(option => option.meaning !== 'no_highlight').map(({ color, name, meaning }) => {
+                      const count = statusCounts[meaning as keyof typeof statusCounts] || 0
+                      const isActive = colorFilter.has(meaning)
+                      const isTransparent = color === 'transparent'
+
+                      if (count === 0)
+                        return null
+
+                      return (
+                        <button
+                          key={meaning}
+                          type="button"
+                          onClick={() => toggleColorFilter(meaning)}
+                          className={cn(
+                            'flex items-center gap-1 px-2 py-1 text-xs rounded transition-all border',
+                            isActive
+                              ? 'border-gray-400 ring-1 ring-blue-300 ring-opacity-50'
+                              : 'border-gray-200 hover:border-gray-300',
+                            isTransparent && 'border-dashed',
+                          )}
+                          title={`${name} highlights (${count})`}
+                        >
+                          <div
+                            className={cn(
+                              'w-3 h-3 rounded border border-gray-300',
+                              isTransparent && 'bg-gray-100 border-dashed',
+                            )}
+                            style={{
+                              backgroundColor: isTransparent ? 'transparent' : color,
+                            }}
+                          />
+                          <span className={cn(
+                            'font-medium',
+                            isActive ? 'text-gray-700' : 'text-gray-500',
+                          )}
+                          >
+                            {name}
+                          </span>
+                          <span className={cn(
+                            'text-xs px-1 py-0.5 rounded-full',
+                            isActive ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600',
+                          )}
+                          >
+                            {count}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {filteredHighlights.length > 0
                 ? (
                     <div className="space-y-1.5 overflow-y-auto max-h-120">
-                      {highlights.map((highlight) => {
+                      {filteredHighlights.map((highlight) => {
                         const data = highlightData.find(d => d.id === highlight.id)
                         return (
                           <div
@@ -416,7 +523,9 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
                   )
                 : (
                     <p className="text-xs text-muted-foreground italic py-2">
-                      Select text on the page to highlight
+                      {highlights.length === 0
+                        ? 'Select text on the page to highlight'
+                        : `No highlights match the current filter. ${highlights.length} total highlights available.`}
                     </p>
                   )}
             </div>
