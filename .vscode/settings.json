@@ -45,5 +45,8 @@
     "scss",
     "pcss",
     "postcss"
+  ],
+  "cSpell.words": [
+    "Anki"
   ]
 }

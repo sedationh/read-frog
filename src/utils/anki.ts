@@ -11,11 +11,6 @@ export const DEFAULT_ANKI_CONFIG: AnkiConnectConfig = {
 // 默认 Anki 配置
 export const DEFAULT_ANKI_OPTIONS: HighlightToAnkiOptions = {
   deckName: 'ReadFrog',
-  modelName: '问题模板',
-  includePronunciation: true,
-  includeExamples: true,
-  includeContext: true,
-  includeLink: true,
 }
 
 /**

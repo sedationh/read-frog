@@ -1,3 +1,5 @@
+import { cn } from '@/utils/tailwind'
+
 export function ConfigCard({ title, description, children, className }: { title: React.ReactNode, description: React.ReactNode, children: React.ReactNode, className?: string }) {
   return (
     <section className={cn('py-6 flex lg:flex-row flex-col lg:gap-x-[50px] xl:gap-x-[100px] gap-y-4', className)}>
