@@ -248,6 +248,7 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
       endPath: getTextNodePath(range.endContainer, containerDom as Element),
       endOffset: range.endOffset,
       isSegmented: range.startContainer !== range.endContainer,
+      status: 'highlight', // 新创建的高亮默认状态为 highlight
       context, // 在创建时就获取上下文
     }
 
@@ -319,11 +320,13 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
     setIsExporting(true)
     try {
       const stored = await loadHighlightsFromStorage()
-      if (stored.length === 0) {
+      // 只处理状态为 'highlight' 的高亮
+      const highlightsToExport = stored.filter(h => h.status === 'highlight' || !h.status) // 兼容旧数据
+      if (highlightsToExport.length === 0) {
         throw new Error('No highlights found to export')
       }
 
-      const promptExport = exportHighlightsAsPrompt(stored, containerSelector)
+      const promptExport = exportHighlightsAsPrompt(highlightsToExport, containerSelector)
       await copyPromptToClipboard(promptExport)
 
       return promptExport
@@ -374,7 +377,16 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
         restoreHighlights(updatedHighlights)
       }
 
-      return explanations.length
+      // 返回实际更新的数量（只计算状态为highlight的）
+      const actualUpdatedCount = explanations.filter((exp) => {
+        const matchingHighlight = stored.find(h =>
+          (h.id === exp.id || h.text === exp.highlight)
+          && (h.status === 'highlight' || !h.status),
+        )
+        return !!matchingHighlight
+      }).length
+
+      return actualUpdatedCount
     }
     catch (error) {
       console.error('Failed to import explanations:', error)
@@ -390,12 +402,14 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
     setIsGenerating(true)
     try {
       const stored = await loadHighlightsFromStorage()
-      if (stored.length === 0) {
+      // 只处理状态为 'highlight' 的高亮
+      const highlightsToProcess = stored.filter(h => h.status === 'highlight' || !h.status) // 兼容旧数据
+      if (highlightsToProcess.length === 0) {
         throw new Error('No highlights found to generate explanations')
       }
 
       // 生成 AI prompt
-      const promptExport = exportHighlightsAsPrompt(stored, containerSelector)
+      const promptExport = exportHighlightsAsPrompt(highlightsToProcess, containerSelector)
       const aiPrompt = generateAIPrompt(promptExport)
 
       // 获取配置
@@ -477,6 +491,17 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
     return stored
   }, [])
 
+  // 获取不同状态的高亮统计
+  const getHighlightStats = useCallback(async () => {
+    const stored = await loadHighlightsFromStorage()
+    const stats = {
+      total: stored.length,
+      highlight: stored.filter(h => h.status === 'highlight' || !h.status).length, // 兼容旧数据
+      exportedToAnki: stored.filter(h => h.status === 'highlight_and_anki').length,
+    }
+    return stats
+  }, [])
+
   // 页面加载时恢复高亮数据
   useEffect(() => {
     if (isActive) {
@@ -524,5 +549,6 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
     importExplanationsFromClipboard,
     generateExplanations,
     getHighlightData,
+    getHighlightStats,
   }
 }

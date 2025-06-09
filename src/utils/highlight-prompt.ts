@@ -132,25 +132,29 @@ export function importHighlightExplanations(
 
   const highlightMap = new Map(existingHighlights.map(h => [h.id, h]))
 
-  // 更新现有 highlights 的解释信息
+  // 更新现有 highlights 的解释信息，只为状态为 'highlight' 的高亮导入解释
   explanations.forEach((explanation) => {
     // 首先尝试通过 ID 匹配
     if (explanation.id && highlightMap.has(explanation.id)) {
       const highlight = highlightMap.get(explanation.id)!
-      updateHighlightWithExplanation(highlight, explanation)
+      // 只为状态为 'highlight' 的高亮导入解释
+      if (highlight.status === 'highlight' || !highlight.status) { // 兼容旧数据
+        updateHighlightWithExplanation(highlight, explanation)
+      }
       return
     }
 
-    // 如果没有 ID，尝试通过文本匹配
+    // 如果没有 ID，尝试通过文本匹配，但只匹配状态为 'highlight' 的高亮
     const matchingHighlight = existingHighlights.find(h =>
-      h.text.toLowerCase().trim() === explanation.highlight.toLowerCase().trim(),
+      h.text.toLowerCase().trim() === explanation.highlight.toLowerCase().trim()
+      && (h.status === 'highlight' || !h.status), // 兼容旧数据
     )
 
     if (matchingHighlight) {
       updateHighlightWithExplanation(matchingHighlight, explanation)
     }
     else {
-      console.warn('No matching highlight found for:', explanation.highlight)
+      console.warn('No matching highlight (with status "highlight") found for:', explanation.highlight)
     }
   })
 

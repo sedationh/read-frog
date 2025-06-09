@@ -11,6 +11,7 @@ export const DEFAULT_ANKI_CONFIG: AnkiConnectConfig = {
 // 默认 Anki 配置
 export const DEFAULT_ANKI_OPTIONS: HighlightToAnkiOptions = {
   deckName: 'ReadFrog',
+  modelName: '问题模板',
 }
 
 /**
@@ -252,8 +253,8 @@ export async function exportHighlightsToAnki(
   }
 
   // 批量添加
+  const results = await addAnkiNotes(ankiNotes, config)
   try {
-    const results = await addAnkiNotes(ankiNotes, config)
     const added = results.filter(id => id !== null).length
     const failed = results.length - added
 

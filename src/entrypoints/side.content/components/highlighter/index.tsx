@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { useAnki } from '@/hooks/useAnki'
 import { useHighlighter } from '@/hooks/useHighlighter'
 import { APP_NAME } from '@/utils/constants/app'
-import { COLOR_OPTIONS } from '@/utils/highlight'
+import { COLOR_OPTIONS, saveHighlightsToStorage } from '@/utils/highlight'
 
 function cn(...classes: (string | undefined | null | false)[]): string {
   return classes.filter(Boolean).join(' ')
@@ -36,12 +36,14 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
     importExplanationsFromClipboard,
     generateExplanations,
     getHighlightData,
+    getHighlightStats,
   } = useHighlighter({
     enabled: true,
     containerSelector: 'body',
   })
 
   const [showExplanations, setShowExplanations] = useState(true)
+  const [highlightStats, setHighlightStats] = useState({ total: 0, highlight: 0, exportedToAnki: 0 })
 
   // Anki integration
   const {
@@ -90,15 +92,34 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
   const handleExportToAnki = async () => {
     try {
       const result = await exportHighlightsWithExplanations()
-      toast.success(`Successfully exported ${result.added} cards to Anki! Exported highlights have been removed.`)
+      toast.success(`Successfully exported ${result.added} cards to Anki! Exported highlights are now marked as exported.`)
 
-      // 移除已导出的高亮
+      // 如果有成功导出的高亮，将状态改为 'highlight_and_anki' 并更改颜色
+      // if (result.exportedHighlightIds.length > 0) {
+      //   const updatedHighlights = highlightsToExport.map((h) => {
+      //     if (result.exportedHighlightIds.includes(h.id)) {
+      //       return {
+      //         ...h,
+      //         status: 'highlight_and_anki' as const,
+      //         color: '#f8d7da', // 红色，表示已导出到Anki
+      //       }
+      //     }
+      //     return h
+      //   })
+      //   await saveHighlightsToStorage(updatedHighlights)
+      // }
+
       if (result.exportedHighlightIds && result.exportedHighlightIds.length > 0) {
-        result.exportedHighlightIds.forEach((highlightId) => {
-          removeHighlight(highlightId)
+        // eslint-disable-next-line array-callback-return
+        highlightData.map((h) => {
+          if (result.exportedHighlightIds.includes(h.id)) {
+            h.status = 'highlight_and_anki'
+            h.color = '#f8d7da'
+          }
         })
-        // 刷新数据显示
+        await saveHighlightsToStorage(highlightData)
         await getHighlightData()
+        await getHighlightStats()
       }
     }
     catch (error) {
@@ -112,6 +133,17 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
       getHighlightData()
     }
   }, [isActive, highlights.length, getHighlightData])
+
+  // 加载统计数据
+  useEffect(() => {
+    const loadStats = async () => {
+      const stats = await getHighlightStats()
+      setHighlightStats(stats)
+    }
+    if (isActive) {
+      loadStats()
+    }
+  }, [isActive, highlights.length, getHighlightStats])
 
   // 滚动到高亮位置
   const scrollToHighlight = (highlight: HighlightState) => {
@@ -183,10 +215,17 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
         <div className="flex items-center gap-2">
           <Highlighter size={16} className="text-blue-500" />
           <span className="text-sm font-medium">Text Highlighter</span>
-          {highlights.length > 0 && (
-            <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">
-              {highlights.length}
-            </span>
+          {highlightStats.total > 0 && (
+            <div className="flex items-center gap-1">
+              <span className="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full">
+                {highlightStats.highlight}
+              </span>
+              {highlightStats.exportedToAnki > 0 && (
+                <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full">
+                  {highlightStats.exportedToAnki}
+                </span>
+              )}
+            </div>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -291,8 +330,13 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-xs font-medium text-muted-foreground">
                   Highlights (
-                  {highlights.length}
-                  )
+                  {highlightStats.highlight}
+                  {' '}
+                  active,
+                  {' '}
+                  {highlightStats.exportedToAnki}
+                  {' '}
+                  exported)
                 </h4>
                 {highlights.length > 0 && (
                   <div className="flex items-center gap-1">

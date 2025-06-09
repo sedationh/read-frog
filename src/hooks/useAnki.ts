@@ -10,7 +10,7 @@ import {
   loadAnkiConfig,
   saveAnkiConfig,
 } from '@/utils/anki'
-import { loadHighlightsFromStorage, saveHighlightsToStorage } from '@/utils/highlight'
+import { loadHighlightsFromStorage } from '@/utils/highlight'
 
 export interface UseAnkiOptions {
   autoConnect?: boolean
@@ -115,14 +115,6 @@ export function useAnki(options: UseAnkiOptions = {}) {
       // 执行导出
       const result = await exportHighlightsToAnki(highlightsToExport, config)
 
-      // 如果有成功导出的高亮，从存储中删除它们
-      if (result.exportedHighlightIds.length > 0) {
-        const remainingHighlights = highlightsToExport.filter(
-          h => !result.exportedHighlightIds.includes(h.id),
-        )
-        await saveHighlightsToStorage(remainingHighlights)
-      }
-
       return result
     }
     catch (error) {
@@ -137,7 +129,10 @@ export function useAnki(options: UseAnkiOptions = {}) {
   // 导出带解释的高亮到 Anki
   const exportHighlightsWithExplanations = useCallback(async () => {
     const highlights = await loadHighlightsFromStorage()
-    const highlightsWithExplanations = highlights.filter(h => h.explanation)
+    // 只导出状态为 'highlight' 且有解释的高亮
+    const highlightsWithExplanations = highlights.filter(h =>
+      h.explanation && (h.status === 'highlight' || !h.status), // 兼容旧数据
+    )
 
     if (highlightsWithExplanations.length === 0) {
       throw new Error('No highlights with explanations found. Please import AI explanations first.')

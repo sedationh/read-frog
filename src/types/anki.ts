@@ -63,4 +63,5 @@ export interface AnkiRequest {
 // 高亮转换为 Anki 卡片的选项
 export interface HighlightToAnkiOptions {
   deckName: string
+  modelName: string
 }

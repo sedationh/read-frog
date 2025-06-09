@@ -11,6 +11,8 @@ export interface HighlightData {
   endPath: number[] // 结束文本节点的路径
   endOffset: number
   isSegmented: boolean // 是否为分段高亮
+  // 高亮状态
+  status?: 'highlight' | 'highlight_and_anki' // 高亮状态：highlight（新高亮）| highlight_and_anki（已导出到Anki）
   // AI 解释相关字段
   context?: string // 高亮文本的上下文
   explanation?: string // AI 生成的解释
