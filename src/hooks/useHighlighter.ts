@@ -209,6 +209,11 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
 
   // 创建高亮（用户选择时调用）
   const createHighlight = useCallback((range: Range, text: string) => {
+    // 如果选择了透明颜色，则不创建高亮
+    if (highlightColor === 'transparent') {
+      return
+    }
+
     const conflictCheck = checkHighlightConflicts(range)
     if (conflictCheck.hasConflict) {
       setConflictMessage(conflictCheck.reason || 'Selection range has conflicts')

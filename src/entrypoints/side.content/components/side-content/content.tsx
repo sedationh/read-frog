@@ -35,14 +35,6 @@ export default function Content() {
     select: mutation => mutation.state.data,
   })
 
-  // const handleReadForMe = () => {
-  //   if (!extractedContent?.paragraphs.join("\n").trim()) {
-  //     toast.error("Cannot read the content: content is not available");
-  //     return;
-  //   }
-  //   readArticle(extractedContent);
-  // };
-
   const handleContinue = () => {
     const analyzeContentData
       = analyzeContentDataList[analyzeContentDataList.length - 1]

@@ -145,7 +145,7 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
 
   // 监听文本选择事件
   useEffect(() => {
-    if (!isActive)
+    if (!isActive || highlightColor === 'transparent')
       return
 
     const handleMouseUp = (e: MouseEvent) => {
@@ -238,25 +238,51 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
 
         {isActive && (
           <>
-            {/* Color Picker */}
+            {/* Enhanced Color Picker */}
             <div>
-              <h4 className="text-xs font-medium text-muted-foreground mb-2">Colors</h4>
-              <div className="flex flex-wrap gap-1.5">
-                {COLOR_OPTIONS.map(({ color, name }) => (
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs font-medium text-muted-foreground">Colors</h4>
+                <div className="text-xs text-muted-foreground">
+                  Current:
+                  {' '}
+                  <span className="font-medium">{COLOR_OPTIONS.find(opt => opt.color === highlightColor)?.name}</span>
+                </div>
+              </div>
+              <div className="flex gap-2 mb-2">
+                {COLOR_OPTIONS.map(({ color, name, meaning }) => (
                   <button
                     type="button"
                     key={color}
                     onClick={() => changeHighlightColor(color)}
-                    title={name}
+                    title={`${name} - ${meaning}`}
                     className={cn(
-                      'w-6 h-6 rounded border-2 transition-all hover:scale-110',
+                      'w-7 h-7 rounded-md border-2 transition-all hover:scale-110 hover:shadow-md relative',
+                      color === 'transparent' && 'bg-gray-100 border-dashed',
                       highlightColor === color
-                        ? 'border-gray-600 ring-1 ring-gray-300'
-                        : 'border-gray-300 hover:border-gray-400',
+                        ? 'border-gray-600 ring-2 ring-blue-300 ring-opacity-50'
+                        : 'border-gray-300 hover:border-gray-500',
                     )}
-                    style={{ backgroundColor: color }}
-                  />
+                    style={{ backgroundColor: color === 'transparent' ? 'transparent' : color }}
+                  >
+                    {highlightColor === color && color !== 'transparent' && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-2 h-2 bg-gray-800 rounded-full opacity-70"></div>
+                      </div>
+                    )}
+                    {highlightColor === color && color === 'transparent' && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                      </div>
+                    )}
+                  </button>
                 ))}
+              </div>
+              <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded">
+                {highlightColor === 'transparent' ? '🚫' : '💡'}
+                {' '}
+                {highlightColor === 'transparent'
+                  ? '高亮功能已暂停，选择文本不会创建高亮'
+                  : COLOR_OPTIONS.find(opt => opt.color === highlightColor)?.meaning || '选择颜色来标记不同类型的内容'}
               </div>
             </div>
 

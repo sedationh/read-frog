@@ -35,6 +35,7 @@ export interface ConflictCheckResult {
 export interface ColorOption {
   color: string
   name: string
+  meaning: string
 }
 
 // Prompt 导出相关接口
