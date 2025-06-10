@@ -1,8 +1,9 @@
 import { atom, createStore } from 'jotai'
+import { atomWithStorage } from 'jotai/utils'
 
 export const store = createStore()
 
-export const isSideOpenAtom = atom(false)
+export const isSideOpenAtom = atomWithStorage('isSideOpenAtom', false)
 
 export const progressAtom = atom({
   completed: 0,

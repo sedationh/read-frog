@@ -9,8 +9,6 @@ import { APP_NAME } from '@/utils/constants/app'
 
 import { MIN_SIDE_CONTENT_WIDTH } from '../../../../utils/constants/side'
 import { isSideOpenAtom } from '../../atoms'
-import Content from './content'
-import { Metadata } from './metadata'
 import { TopBar } from './top-bar'
 
 export default function SideContent() {
@@ -113,8 +111,6 @@ export default function SideContent() {
           {!isAnyAPIKey(providersConfig) && (
             <APIConfigWarning className="mx-3" />
           )}
-          <Metadata className="mx-3" />
-          <Content />
         </div>
         <Toaster richColors className="z-[2147483647]" duration={10000} />
       </div>
