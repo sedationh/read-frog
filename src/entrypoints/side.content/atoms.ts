@@ -14,32 +14,24 @@ export const progressAtom = atom({
 export const translationPortAtom = atom<Browser.runtime.Port | null>(null)
 export const enablePageTranslationAtom = atom(false)
 
-// export const explainAtom = atomWithMutation(() => ({
-//   mutationKey: ["explainArticle"],
-//   mutationFn: mutationFn,
-// }));
-
 export const readStateAtom = atom<
   'extracting' | 'analyzing' | 'continue?' | 'explaining' | undefined
 >(undefined)
 
-// Highlight storage - storing only serializable data
-interface StoredHighlight {
+// 定义高亮数据结构
+export interface HighlightData {
   id: string
-  text: string
+  textContent: string
   color: string
-  timestamp: number
-  // Store selection info to recreate highlights
-  selectionData: {
-    startXPath: string
-    startOffset: number
-    endXPath: string
-    endOffset: number
+  startContainer: {
+    xpath: string
+    offset: number
   }
-  // Additional metadata
-  url?: string
-  title?: string
-  isSegmented?: boolean
+  endContainer: {
+    xpath: string
+    offset: number
+  }
+  timestamp: number
 }
 
-export const highlightsAtom = atomWithStorage<StoredHighlight[]>('highlightsAtom', [])
+export const highlightsAtom = atomWithStorage<HighlightData[]>('highlightsAtom', [])

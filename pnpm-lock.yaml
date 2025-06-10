@@ -92,6 +92,9 @@ importers:
       franc-min:
         specifier: ^6.2.0
         version: 6.2.0
+      get-xpath:
+        specifier: ^3.3.0
+        version: 3.3.0
       hotkeys-js:
         specifier: ^3.13.10
         version: 3.13.10
@@ -3216,6 +3219,9 @@ packages:
 
   get-tsconfig@4.10.1:
     resolution: {integrity: sha512-auHyJ4AgMz7vgS8Hp3N6HXSmlMdUyhSUrfBF16w153rxtLIEOE+HGqaBppczZvnHLqQJfiHotCYpNhl0lUROFQ==}
+
+  get-xpath@3.3.0:
+    resolution: {integrity: sha512-AKbHVEHSlSDS9AJDmjfSxV010xSVRFzkS4UkGCb8CaGvorp83GCuKwcmzF/64CVp3M5wjgy9tc6y1uR2V+c5Xw==}
 
   giget@2.0.0:
     resolution: {integrity: sha512-L5bGsVkxJbJgdnwyuheIunkGatUF/zssUoxxjACCseZYAVbaqdh9Tsmmlkl8vYan09H7sbvKt4pS8GqKLBrEzA==}
@@ -8737,6 +8743,8 @@ snapshots:
   get-tsconfig@4.10.1:
     dependencies:
       resolve-pkg-maps: 1.0.0
+
+  get-xpath@3.3.0: {}
 
   giget@2.0.0:
     dependencies:

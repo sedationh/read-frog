@@ -51,6 +51,7 @@
     "crypto-js": "^4.2.0",
     "deepmerge": "^4.3.1",
     "franc-min": "^6.2.0",
+    "get-xpath": "^3.3.0",
     "hotkeys-js": "^3.13.10",
     "jotai": "^2.12.3",
     "lucide-react": "^0.501.0",
