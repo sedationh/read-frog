@@ -32,6 +32,9 @@ export interface HighlightData {
     offset: number
   }
   timestamp: number
+  context: string
+  // domain + pathname
+  pageUrl: string
 }
 
 export const highlightsAtom = atomWithStorage<HighlightData[]>('highlightsAtom', [])

@@ -194,6 +194,8 @@ function Highlight() {
           offset: range.endOffset,
         },
         timestamp: Date.now(),
+        context: '',
+        pageUrl: window.location.origin + window.location.pathname,
       }
 
       // 保存高亮数据
