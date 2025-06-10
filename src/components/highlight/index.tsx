@@ -117,6 +117,47 @@ function createHighlightElement(id: string, color: string, selectedText: string,
   return highlightElement
 }
 
+interface ConflictCheckResult {
+  hasConflict: boolean
+  reason?: string
+  conflictElement?: Element
+}
+
+export function checkHighlightConflicts(range: Range): ConflictCheckResult {
+  // 检查选择范围内是否已包含高亮元素
+  const container = range.commonAncestorContainer instanceof Element
+    ? range.commonAncestorContainer
+    : range.commonAncestorContainer.parentElement || document
+
+  const existingHighlights = container.querySelectorAll('[data-highlight-id]') as NodeListOf<Element>
+
+  for (const highlight of existingHighlights) {
+    // 检查是否在选择范围内
+    if (range.intersectsNode(highlight)) {
+      return {
+        hasConflict: true,
+        reason: '选择范围与现有高亮重叠',
+        conflictElement: highlight,
+      }
+    }
+  }
+
+  // 检查选择范围是否完全在某个高亮内部
+  let currentNode = range.startContainer
+  while (currentNode && currentNode !== document.body) {
+    if (currentNode instanceof Element && currentNode.hasAttribute('data-highlight-id')) {
+      return {
+        hasConflict: true,
+        reason: '选择范围在现有高亮内部',
+        conflictElement: currentNode,
+      }
+    }
+    currentNode = currentNode.parentNode as Node
+  }
+
+  return { hasConflict: false }
+}
+
 function Highlight() {
   const [highlights, setHighlights] = useAtom(highlightsAtom)
 
@@ -125,6 +166,13 @@ function Highlight() {
   }
 
   const createHighlight = (range: Range, textContent: string) => {
+    // 冲突检测
+    const conflictResult = checkHighlightConflicts(range)
+    if (conflictResult.hasConflict) {
+      console.warn('conflictResult', conflictResult)
+      return
+    }
+
     try {
       const highlightId = generateHighlightId()
 
