@@ -166,6 +166,18 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
       return
     }
 
+    // 先清除现有的高亮显示（但不从存储中删除）
+    highlights.forEach((highlight) => {
+      if (highlight.segments && highlight.segments.length > 0) {
+        highlight.segments.forEach((segment) => {
+          removeHighlightElement(segment)
+        })
+      }
+      else {
+        removeHighlightElement(highlight.element)
+      }
+    })
+
     const restoredHighlights: HighlightState[] = []
 
     for (const data of highlightDataList) {
@@ -204,10 +216,9 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
       }
     }
 
-    if (restoredHighlights.length > 0) {
-      setHighlights(restoredHighlights)
-    }
-  }, [containerSelector, createHighlightFromRange])
+    // 更新状态，设置所有恢复的高亮
+    setHighlights(restoredHighlights)
+  }, [containerSelector, createHighlightFromRange, highlights])
 
   // 创建高亮（用户选择时调用）
   const createHighlight = useCallback((range: Range, text: string) => {
@@ -313,6 +324,8 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
     // 保存到 localStorage
     saveHighlightColorToStorage(color).catch((error) => {
       console.error('Failed to save highlight color:', error)
+      // 如果保存失败，可以考虑回滚到之前的颜色或给用户提示
+      // 这里暂时只记录错误，保持当前状态
     })
   }, [])
 
@@ -511,9 +524,13 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
   // 初始化时加载保存的高亮颜色
   useEffect(() => {
     loadHighlightColorFromStorage().then((savedColor) => {
-      setHighlightColor(savedColor)
+      if (savedColor && savedColor !== highlightColor) {
+        setHighlightColor(savedColor)
+      }
     }).catch((error) => {
       console.error('Failed to load highlight color:', error)
+      // 确保有一个默认颜色
+      setHighlightColor(DEFAULT_HIGHLIGHT_COLOR)
     })
   }, [])
 

@@ -462,7 +462,7 @@ export function HighlighterSection({ className }: HighlighterSectionProps) {
 
               {filteredHighlights.length > 0
                 ? (
-                    <div className="space-y-1.5 overflow-y-auto max-h-120">
+                    <div className="space-y-1.5 overflow-y-auto max-h-100">
                       {filteredHighlights.map((highlight) => {
                         const data = highlightData.find(d => d.id === highlight.id)
                         return (
