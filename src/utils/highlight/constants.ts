@@ -10,6 +10,7 @@ export const COLOR_OPTIONS: ColorOption[] = [
 export const DEFAULT_HIGHLIGHT_COLOR = '#fff3cd'
 
 export const STORAGE_KEY = 'read-frog-highlights'
+export const HIGHLIGHT_COLOR_STORAGE_KEY = 'read-frog-highlight-color'
 
 export const HIGHLIGHT_ATTRIBUTE = 'data-read-frog-highlight'
 export const HIGHLIGHT_GROUP_ATTRIBUTE = 'data-highlight-group'

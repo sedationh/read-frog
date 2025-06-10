@@ -10,8 +10,10 @@ import {
   generateHighlightId,
   getTextNodeByPath,
   getTextNodePath,
+  loadHighlightColorFromStorage,
   loadHighlightsFromStorage,
   removeHighlightElement,
+  saveHighlightColorToStorage,
   saveHighlightsToStorage,
 } from '../utils/highlight'
 import {
@@ -308,6 +310,10 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
   // 更改高亮颜色
   const changeHighlightColor = useCallback((color: string) => {
     setHighlightColor(color)
+    // 保存到 localStorage
+    saveHighlightColorToStorage(color).catch((error) => {
+      console.error('Failed to save highlight color:', error)
+    })
   }, [])
 
   // 切换扩展状态
@@ -500,6 +506,15 @@ export function useHighlighter(options: UseHighlighterOptions = {}) {
       exportedToAnki: stored.filter(h => h.status === 'highlight_and_anki').length,
     }
     return stats
+  }, [])
+
+  // 初始化时加载保存的高亮颜色
+  useEffect(() => {
+    loadHighlightColorFromStorage().then((savedColor) => {
+      setHighlightColor(savedColor)
+    }).catch((error) => {
+      console.error('Failed to load highlight color:', error)
+    })
   }, [])
 
   // 页面加载时恢复高亮数据
