@@ -109,7 +109,7 @@ export default function SideContent() {
         >
         </div>
 
-        <div className="flex h-full flex-col gap-y-2 py-3">
+        <div className="flex h-full flex-col gap-y-2 py-3 overflow-y-auto">
           <TopBar className="mx-3" />
           {!isAnyAPIKey(providersConfig) && (
             <APIConfigWarning className="mx-3" />

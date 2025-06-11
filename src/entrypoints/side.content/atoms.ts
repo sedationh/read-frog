@@ -28,11 +28,11 @@ export function atomWithStorage<Value>(
   }
 
   const _initialValue = getInitialValue()
-  if (_initialValue !== null) {
-    initialValue = _initialValue
+  if (_initialValue === null) {
+    storage.setItem(key, initialValue)
   }
   else {
-    storage.setItem(key, initialValue)
+    initialValue = _initialValue
   }
 
   const baseAtom = atom(initialValue)

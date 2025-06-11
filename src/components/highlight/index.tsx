@@ -648,6 +648,9 @@ function Highlight({ className }: HighlightProps) {
           </>
         )}
       </div>
+      <pre>
+        {JSON.stringify(highlights, null, 2)}
+      </pre>
     </div>
   )
 }
