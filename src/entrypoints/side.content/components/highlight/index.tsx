@@ -4,7 +4,7 @@ import { useAtom } from 'jotai'
 import { Check, Copy, Download, FileText, Highlighter, Loader2, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { highlightsAtom } from '@/entrypoints/side.content/atoms'
-import { copyPromptToClipboard, importHighlightsFromClipboard } from '@/entrypoints/side.content/utils/anki'
+import { addNote, copyPromptToClipboard, importHighlightsFromClipboard } from '@/entrypoints/side.content/utils/anki'
 import { cn } from '@/utils/tailwind'
 import { checkHighlightConflicts, createHighlightData, removeAllHighlights, removeHighlight, restoreHighlightFromRange, restoreHighlights, scrollToHighlight } from '../../utils/highlight'
 
@@ -348,7 +348,12 @@ function Highlight() {
                           key={highlight.id}
                           className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm group transition-colors duration-200 border border-gray-200"
                         >
-                          <div className="flex items-center justify-between">
+                          <div
+                            style={{
+                              backgroundColor: highlight.color,
+                            }}
+                            className="flex items-center justify-between p-1 rounded"
+                          >
                             <button
                               type="button"
                               onClick={() => scrollToHighlight(highlight)}
@@ -499,8 +504,43 @@ function Highlight() {
 
               <button
                 type="button"
-                onClick={() => handleButtonClick('exportAnki', () => {
-                  // TODO: Implement export functionality
+                onClick={() => handleButtonClick('exportAnki', async () => {
+                  // Export highlights that have explanation data to Anki
+                  const highlightsWithExplanations = highlights.filter(h => h.explanation?.trim?.()?.length && h.color === '#fbbf24')
+
+                  if (highlightsWithExplanations.length === 0) {
+                    throw new Error('No highlights with explanations found. Please import explanations first.')
+                  }
+
+                  const results: { success: boolean, id: string }[] = []
+                  for (const highlight of highlightsWithExplanations) {
+                    const result = await addNote(highlight)
+                    results.push({
+                      success: result.success,
+                      id: highlight.id,
+                    })
+                  }
+
+                  const successful = results.filter(r => r.success).length
+                  const failed = results.filter(r => !r.success).length
+
+                  if (failed > 0) {
+                    throw new Error(`Exported ${successful} cards successfully, ${failed} failed. Make sure Anki is running with AnkiConnect addon.`)
+                  }
+
+                  // to Gray
+                  setHighlights(highlights.map((h) => {
+                    const result = results.find(r => r.success && r.id === h.id)
+                    if (result) {
+                      return {
+                        ...h,
+                        color: '#e5e7eb',
+                      }
+                    }
+                    else {
+                      return h
+                    }
+                  }))
                 })}
                 disabled={buttonStates.exportAnki === 'loading'}
                 className={cn(

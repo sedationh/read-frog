@@ -1,4 +1,5 @@
 import type { HighlightData } from '@/entrypoints/side.content/atoms'
+import { sendMessage } from '@/utils/message'
 
 /**
  * Generate English learning prompt from yellow highlights
@@ -121,4 +122,57 @@ export async function copyToClipboard(text: string): Promise<void> {
 export async function copyPromptToClipboard(highlights: HighlightData[]): Promise<void> {
   const prompt = generateEnglishLearningPrompt(highlights)
   await copyToClipboard(prompt)
+}
+
+const SERVER_URL = 'http://localhost:8765'
+const API_VERSION = 6
+
+export async function invokeAnkiConnect(action: string, params = {}) {
+  const request = {
+    action,
+    version: API_VERSION,
+    params,
+  }
+
+  // Use background script to bypass CORS
+  const response = await sendMessage('ANKI_REQUEST', {
+    url: SERVER_URL,
+    request,
+  })
+
+  if (!response.success) {
+    throw new Error(response.error || 'Failed to invoke AnkiConnect')
+  }
+
+  return response.result
+}
+
+export async function addNote(note: HighlightData) {
+  const boldContext = note.context.replace(
+    new RegExp(note.textContent, 'gi'),
+    `<b>$&</b>`,
+  )
+
+  const ankiNote = {
+    deckName: 'ReadFrog',
+    modelName: '问题模板',
+    fields: {
+      问题: boldContext,
+      答案: `${note.pronunciation}<br>${note.explanation}<br>${note.examples?.map(example => `- ${example}`).join('<br>') || ''}`,
+      相关知识: `<a href="${note.pageUrl}">${note.pageUrl}</a>`,
+    },
+    options: {
+      allowDuplicate: true,
+      duplicateScope: 'deck',
+    },
+  }
+
+  try {
+    const result = await invokeAnkiConnect('addNote', { note: ankiNote })
+    return { success: true, result }
+  }
+  catch (error) {
+    console.error(`Error adding note:`, error)
+    return { success: false, error }
+  }
 }
