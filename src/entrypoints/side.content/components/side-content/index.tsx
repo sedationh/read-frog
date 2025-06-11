@@ -3,10 +3,8 @@ import { useAtom, useAtomValue } from 'jotai'
 import { useEffect, useState } from 'react'
 import { Toaster } from 'sonner'
 
-import { APIConfigWarning } from '@/components/api-config-warning'
 import Highlight from '@/components/highlight'
 import { configFields } from '@/utils/atoms/config'
-import { isAnyAPIKey } from '@/utils/config/config'
 import { APP_NAME } from '@/utils/constants/app'
 import { cn } from '@/utils/tailwind'
 
@@ -18,7 +16,6 @@ export default function SideContent() {
   const isSideOpen = useAtomValue(isSideOpenAtom)
   const [sideContent, setSideContent] = useAtom(configFields.sideContent)
   const [isResizing, setIsResizing] = useState(false)
-  const providersConfig = useAtomValue(configFields.providersConfig)
 
   // Setup resize handlers
   useEffect(() => {
@@ -111,9 +108,6 @@ export default function SideContent() {
 
         <div className="flex h-full flex-col gap-y-2 py-3 overflow-y-auto">
           <TopBar className="mx-3" />
-          {!isAnyAPIKey(providersConfig) && (
-            <APIConfigWarning className="mx-3" />
-          )}
           <Highlight />
         </div>
         <Toaster position="top-center" richColors className="z-[2147483647]" duration={10000} />
