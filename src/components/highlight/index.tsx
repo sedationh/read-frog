@@ -1,6 +1,6 @@
 import type { HighlightData } from '@/entrypoints/side.content/atoms'
 import getXPath from 'get-xpath'
-import { useAtom, useAtomValue } from 'jotai'
+import { useAtom } from 'jotai'
 import { Highlighter, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { highlightsAtom } from '@/entrypoints/side.content/atoms'
@@ -13,10 +13,7 @@ export function generateHighlightId(): string {
 // Color options for highlighting
 const COLOR_OPTIONS = [
   { color: '#fbbf24', name: 'Yellow', meaning: 'highlight' },
-  { color: '#60a5fa', name: 'Blue', meaning: 'important' },
-  { color: '#34d399', name: 'Green', meaning: 'good' },
-  { color: '#f87171', name: 'Red', meaning: 'question' },
-  { color: '#a78bfa', name: 'Purple', meaning: 'idea' },
+  { color: '#e5e7eb', name: 'Gray', meaning: 'has_add_to_anki' },
   { color: 'transparent', name: 'Disabled', meaning: 'no_highlight' },
 ]
 
@@ -179,7 +176,7 @@ function Highlight({ className }: HighlightProps) {
   const [isActive, setIsActive] = useState(true)
   const [highlightColor, setHighlightColor] = useState('#fbbf24') // Default yellow
   const [conflictMessage, setConflictMessage] = useState('')
-  const [colorFilter, setColorFilter] = useState<Set<string>>(() => new Set(['highlight', 'important', 'good', 'question', 'idea']))
+  const [colorFilter, setColorFilter] = useState<Set<string>>(() => new Set(COLOR_OPTIONS.map(v => v.meaning)))
 
   useEffect(() => {
     restoreHighlights(highlights)
