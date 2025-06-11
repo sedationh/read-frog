@@ -528,8 +528,7 @@ function Highlight() {
                     throw new Error(`Exported ${successful} cards successfully, ${failed} failed. Make sure Anki is running with AnkiConnect addon.`)
                   }
 
-                  // to Gray
-                  setHighlights(highlights.map((h) => {
+                  const newHighlights = highlights.map((h) => {
                     const result = results.find(r => r.success && r.id === h.id)
                     if (result) {
                       return {
@@ -540,7 +539,11 @@ function Highlight() {
                     else {
                       return h
                     }
-                  }))
+                  })
+                  // to Gray
+                  setHighlights(newHighlights)
+                  removeAllHighlights(newHighlights)
+                  restoreHighlights(newHighlights)
                 })}
                 disabled={buttonStates.exportAnki === 'loading'}
                 className={cn(
