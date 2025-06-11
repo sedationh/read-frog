@@ -9,15 +9,15 @@ import { checkHighlightConflicts, createHighlightData, removeAllHighlights, remo
 
 // Color options for highlighting
 const COLOR_OPTIONS = [
+  { color: 'transparent', name: 'Disabled', meaning: 'no_highlight' },
   { color: '#fbbf24', name: 'Yellow', meaning: 'highlight' },
   { color: '#e5e7eb', name: 'Gray', meaning: 'has_add_to_anki' },
-  { color: 'transparent', name: 'Disabled', meaning: 'no_highlight' },
 ]
 
 function Highlight() {
   const [highlights, setHighlights] = useAtom(highlightsAtom)
   const [isActive, setIsActive] = useState(true)
-  const [highlightColor, setHighlightColor] = useState('#fbbf24') // Default yellow
+  const [highlightColor, setHighlightColor] = useState(COLOR_OPTIONS[0].color) // Default yellow
   const [conflictMessage, setConflictMessage] = useState('')
   const [colorFilter, setColorFilter] = useState<Set<string>>(() => new Set(COLOR_OPTIONS.map(v => v.meaning)))
 
