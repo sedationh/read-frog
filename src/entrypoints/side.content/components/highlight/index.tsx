@@ -409,8 +409,6 @@ function Highlight() {
                 {buttonStates.copyPrompt === 'idle' && <Copy size={14} />}
                 {buttonStates.copyPrompt === 'success' ? 'Copied!' : 'Copy Prompt'}
               </button>
-              {' '}
-              是s 是                                               a d
 
               <button
                 type="button"
