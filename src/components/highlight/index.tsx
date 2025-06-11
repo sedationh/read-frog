@@ -1,6 +1,6 @@
 import type { HighlightData } from '@/entrypoints/side.content/atoms'
 import getXPath from 'get-xpath'
-import { useAtom } from 'jotai'
+import { useAtom, useAtomValue } from 'jotai'
 import { Highlighter, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { highlightsAtom } from '@/entrypoints/side.content/atoms'
@@ -179,7 +179,12 @@ function Highlight({ className }: HighlightProps) {
   const [isActive, setIsActive] = useState(true)
   const [highlightColor, setHighlightColor] = useState('#fbbf24') // Default yellow
   const [conflictMessage, setConflictMessage] = useState('')
-  const [colorFilter, setColorFilter] = useState<Set<string>>(new Set(['highlight', 'important', 'good', 'question', 'idea']))
+  const [colorFilter, setColorFilter] = useState<Set<string>>(() => new Set(['highlight', 'important', 'good', 'question', 'idea']))
+
+  useEffect(() => {
+    restoreHighlights(highlights)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const addHighlight = (highlight: HighlightData) => {
     setHighlights(prev => [...prev, highlight])

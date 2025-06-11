@@ -1,5 +1,54 @@
+import type { PrimitiveAtom, SetStateAction } from 'jotai'
 import { atom, createStore } from 'jotai'
-import { atomWithStorage } from 'jotai/utils'
+
+const storage = {
+  getItem: (key: string) => {
+    const storedValue = localStorage.getItem(key)
+    if (storedValue === null) {
+      throw new Error('no value stored')
+    }
+    return JSON.parse(storedValue)
+  },
+  setItem: (key: string, newValue: unknown) => {
+    localStorage.setItem(key, JSON.stringify(newValue))
+  },
+}
+
+export function atomWithStorage<Value>(
+  key: string,
+  initialValue: Value,
+): PrimitiveAtom<Value> {
+  const getInitialValue = () => {
+    try {
+      return storage.getItem(key)
+    }
+    catch {
+      return null
+    }
+  }
+
+  const _initialValue = getInitialValue()
+  if (_initialValue !== null) {
+    initialValue = _initialValue
+  }
+  else {
+    storage.setItem(key, initialValue)
+  }
+
+  const baseAtom = atom(initialValue)
+
+  return atom(
+    get => get(baseAtom),
+    (get, set, update: SetStateAction<Value>) => {
+      const newValue
+        = typeof update === 'function'
+          ? (update as (prev: Value) => Value)(get(baseAtom))
+          : update
+      set(baseAtom, newValue)
+      storage.setItem(key, newValue)
+    },
+  )
+}
 
 export const store = createStore()
 
