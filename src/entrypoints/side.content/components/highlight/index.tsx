@@ -1,7 +1,7 @@
 import type { HighlightData } from '@/entrypoints/side.content/atoms'
 import { useLocalStorageState, useMount } from 'ahooks'
 import { useAtom } from 'jotai'
-import { Copy, Download, FileText, Highlighter, Plus, Trash2 } from 'lucide-react'
+import { Check, Copy, Download, FileText, Highlighter, Loader2, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { highlightsAtom } from '@/entrypoints/side.content/atoms'
 import { copyPromptToClipboard } from '@/entrypoints/side.content/utils/anki'
@@ -23,6 +23,11 @@ function Highlight() {
   }) // Default yellow
   const [conflictMessage, setConflictMessage] = useState('')
   const [colorFilter, setColorFilter] = useState<Set<string>>(() => new Set(COLOR_OPTIONS.map(v => v.meaning)))
+  const [buttonStates, setButtonStates] = useState<Record<string, 'idle' | 'loading' | 'success'>>({
+    copyPrompt: 'idle',
+    importPrompt: 'idle',
+    exportAnki: 'idle',
+  })
 
   useMount(() => {
     restoreHighlights(highlights)
@@ -30,6 +35,23 @@ function Highlight() {
 
   const addHighlight = (highlight: HighlightData) => {
     setHighlights(prev => [...prev, highlight])
+  }
+
+  // Handle button feedback
+  const handleButtonClick = async (buttonKey: string, action: () => Promise<void> | void) => {
+    setButtonStates(prev => ({ ...prev, [buttonKey]: 'loading' }))
+    try {
+      await action()
+      setButtonStates(prev => ({ ...prev, [buttonKey]: 'success' }))
+      // Reset to idle after 2 seconds
+      setTimeout(() => {
+        setButtonStates(prev => ({ ...prev, [buttonKey]: 'idle' }))
+      }, 2000)
+    }
+    catch (error) {
+      console.error('Button action failed:', error)
+      setButtonStates(prev => ({ ...prev, [buttonKey]: 'idle' }))
+    }
   }
 
   const createHighlight = (range: Range) => {
@@ -371,30 +393,65 @@ function Highlight() {
             <div className="flex items-stretch gap-2">
               <button
                 type="button"
-                onClick={() => copyPromptToClipboard(highlights)}
-                className="flex flex-1 items-center gap-1 px-3 py-2 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition-colors"
+                onClick={() => handleButtonClick('copyPrompt', () => copyPromptToClipboard(highlights))}
+                disabled={buttonStates.copyPrompt === 'loading'}
+                className={cn(
+                  'flex flex-1 items-center gap-1 px-3 py-2 text-xs font-medium border rounded transition-colors',
+                  buttonStates.copyPrompt === 'success'
+                    ? 'text-green-600 bg-green-50 border-green-200'
+                    : 'text-blue-600 bg-blue-50 hover:bg-blue-100 border-blue-200',
+                  buttonStates.copyPrompt === 'loading' && 'opacity-70 cursor-not-allowed',
+                )}
                 title="Copy formatted prompt"
               >
-                <Copy size={14} />
-                Copy Prompt
+                {buttonStates.copyPrompt === 'loading' && <Loader2 size={14} className="animate-spin" />}
+                {buttonStates.copyPrompt === 'success' && <Check size={14} />}
+                {buttonStates.copyPrompt === 'idle' && <Copy size={14} />}
+                {buttonStates.copyPrompt === 'success' ? 'Copied!' : 'Copy Prompt'}
               </button>
+              {' '}
+              是s 是                                               a d
 
               <button
                 type="button"
-                className="flex flex-1 items-center gap-1 px-3 py-2 text-xs font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded transition-colors"
+                onClick={() => handleButtonClick('importPrompt', () => {
+                  // TODO: Implement import functionality
+                })}
+                disabled={buttonStates.importPrompt === 'loading'}
+                className={cn(
+                  'flex flex-1 items-center gap-1 px-3 py-2 text-xs font-medium border rounded transition-colors',
+                  buttonStates.importPrompt === 'success'
+                    ? 'text-green-600 bg-green-50 border-green-200'
+                    : 'text-purple-600 bg-purple-50 hover:bg-purple-100 border-purple-200',
+                  buttonStates.importPrompt === 'loading' && 'opacity-70 cursor-not-allowed',
+                )}
                 title="Import highlights from prompt"
               >
-                <FileText size={14} />
-                Import From Prompt
+                {buttonStates.importPrompt === 'loading' && <Loader2 size={14} className="animate-spin" />}
+                {buttonStates.importPrompt === 'success' && <Check size={14} />}
+                {buttonStates.importPrompt === 'idle' && <FileText size={14} />}
+                {buttonStates.importPrompt === 'success' ? 'Imported!' : 'Import From Prompt'}
               </button>
 
               <button
                 type="button"
-                className="flex flex-1 items-center gap-1 px-3 py-2 text-xs font-medium text-green-600 bg-green-50 hover:bg-green-100 border border-green-200 rounded transition-colors"
+                onClick={() => handleButtonClick('exportAnki', () => {
+                  // TODO: Implement export functionality
+                })}
+                disabled={buttonStates.exportAnki === 'loading'}
+                className={cn(
+                  'flex flex-1 items-center gap-1 px-3 py-2 text-xs font-medium border rounded transition-colors',
+                  buttonStates.exportAnki === 'success'
+                    ? 'text-green-600 bg-green-50 border-green-200'
+                    : 'text-green-600 bg-green-50 hover:bg-green-100 border-green-200',
+                  buttonStates.exportAnki === 'loading' && 'opacity-70 cursor-not-allowed',
+                )}
                 title="Export highlights to Anki"
               >
-                <Download size={14} />
-                Export To Anki
+                {buttonStates.exportAnki === 'loading' && <Loader2 size={14} className="animate-spin" />}
+                {buttonStates.exportAnki === 'success' && <Check size={14} />}
+                {buttonStates.exportAnki === 'idle' && <Download size={14} />}
+                {buttonStates.exportAnki === 'success' ? 'Exported!' : 'Export To Anki'}
               </button>
             </div>
           </>
