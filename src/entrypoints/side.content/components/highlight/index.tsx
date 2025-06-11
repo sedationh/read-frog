@@ -1,7 +1,7 @@
 import type { HighlightData } from '@/entrypoints/side.content/atoms'
 import { useLocalStorageState, useMount } from 'ahooks'
 import { useAtom } from 'jotai'
-import { Highlighter, Trash2 } from 'lucide-react'
+import { Copy, Download, FileText, Highlighter, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { highlightsAtom } from '@/entrypoints/side.content/atoms'
 import { cn } from '@/utils/tailwind'
@@ -366,6 +366,35 @@ function Highlight() {
               💡 Select text to highlight. Click highlighted text to jump to its location.
             </div>
 
+            {/* Buttons */}
+            <div className="flex items-stretch gap-2">
+              <button
+                type="button"
+                className="flex flex-1 items-center gap-1 px-3 py-2 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition-colors"
+                title="Copy formatted prompt"
+              >
+                <Copy size={14} />
+                Copy Prompt
+              </button>
+
+              <button
+                type="button"
+                className="flex flex-1 items-center gap-1 px-3 py-2 text-xs font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded transition-colors"
+                title="Import highlights from prompt"
+              >
+                <FileText size={14} />
+                Import From Prompt
+              </button>
+
+              <button
+                type="button"
+                className="flex flex-1 items-center gap-1 px-3 py-2 text-xs font-medium text-green-600 bg-green-50 hover:bg-green-100 border border-green-200 rounded transition-colors"
+                title="Export highlights to Anki"
+              >
+                <Download size={14} />
+                Export To Anki
+              </button>
+            </div>
           </>
         )}
       </div>
