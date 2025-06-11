@@ -4,6 +4,7 @@ import { useAtom } from 'jotai'
 import { Copy, Download, FileText, Highlighter, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { highlightsAtom } from '@/entrypoints/side.content/atoms'
+import { copyPromptToClipboard } from '@/entrypoints/side.content/utils/anki'
 import { cn } from '@/utils/tailwind'
 import { checkHighlightConflicts, createHighlightData, removeAllHighlights, removeHighlight, restoreHighlightFromRange, restoreHighlights, scrollToHighlight } from '../../utils/highlight'
 
@@ -370,6 +371,7 @@ function Highlight() {
             <div className="flex items-stretch gap-2">
               <button
                 type="button"
+                onClick={() => copyPromptToClipboard(highlights)}
                 className="flex flex-1 items-center gap-1 px-3 py-2 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition-colors"
                 title="Copy formatted prompt"
               >
