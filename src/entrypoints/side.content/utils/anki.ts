@@ -30,6 +30,7 @@ Please explain the highlighted words/phrases from the text below:
 - Provide simple definitions in English at this context
 - Give 2-3 example sentences for each highlighted word/phrase
 - Give American pronunciation for each highlighted word/phrase
+- No need to use ** to wrap the highlighted text
 
 ${combinedText}
 
@@ -45,6 +46,52 @@ The JSON format should be like this:
     "id": "highlight_id"
   }
 ]`
+}
+
+/**
+ * Import highlights from clipboard content
+ * @returns Array of imported highlight data
+ */
+export async function importHighlightsFromClipboard(): Promise<Array<{
+  id: string
+  explanation: string
+  examples: string[]
+  pronunciation: string
+}>> {
+  try {
+    const clipboardText = await navigator.clipboard.readText().then(text => text.trim())
+
+    // Try to parse as JSON first (AI response format)
+    if (clipboardText.startsWith('[') && clipboardText.endsWith(']')) {
+      const jsonData = JSON.parse(clipboardText)
+
+      if (!Array.isArray(jsonData)) {
+        throw new TypeError('JSON data should be an array')
+      }
+
+      const explanations = []
+
+      for (const item of jsonData) {
+        if (item.id && item.explanation) {
+          explanations.push({
+            id: item.id,
+            explanation: item.explanation,
+            examples: item.examples || [],
+            pronunciation: item.pronunciation || '',
+          })
+        }
+      }
+
+      return explanations
+    }
+
+    // For prompt format, return empty array since it doesn't contain explanations
+    return []
+  }
+  catch (error) {
+    console.error('Failed to read from clipboard:', error)
+    throw new Error('Failed to read from clipboard. Please make sure you have copied a valid JSON response.')
+  }
 }
 
 /**

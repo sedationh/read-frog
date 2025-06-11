@@ -4,7 +4,7 @@ import { useAtom } from 'jotai'
 import { Check, Copy, Download, FileText, Highlighter, Loader2, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { highlightsAtom } from '@/entrypoints/side.content/atoms'
-import { copyPromptToClipboard } from '@/entrypoints/side.content/utils/anki'
+import { copyPromptToClipboard, importHighlightsFromClipboard } from '@/entrypoints/side.content/utils/anki'
 import { cn } from '@/utils/tailwind'
 import { checkHighlightConflicts, createHighlightData, removeAllHighlights, removeHighlight, restoreHighlightFromRange, restoreHighlights, scrollToHighlight } from '../../utils/highlight'
 
@@ -342,7 +342,7 @@ function Highlight() {
 
               {filteredHighlights.length > 0
                 ? (
-                    <div className="space-y-1.5 overflow-y-auto max-h-[400px]">
+                    <div className="space-y-1.5 overflow-y-auto max-h-[600px]">
                       {filteredHighlights.map(highlight => (
                         <div
                           key={highlight.id}
@@ -371,6 +371,37 @@ function Highlight() {
                               <Trash2 size={12} />
                             </button>
                           </div>
+
+                          {/* Show AI explanation if available */}
+                          {highlight.explanation && (
+                            <div className="mt-2 space-y-2 border-t border-gray-200 pt-2">
+                              <div>
+                                <div className="font-medium text-gray-700 mb-1">📖 Explanation:</div>
+                                <div className="text-gray-600 text-sm">{highlight.explanation}</div>
+                              </div>
+
+                              {highlight.pronunciation && (
+                                <div>
+                                  <div className="font-medium text-gray-700 mb-1">🔊 Pronunciation:</div>
+                                  <div className="text-gray-600 text-sm font-mono">{highlight.pronunciation}</div>
+                                </div>
+                              )}
+
+                              {highlight.examples && highlight.examples.length > 0 && (
+                                <div>
+                                  <div className="font-medium text-gray-700 mb-1">💡 Examples:</div>
+                                  <ul className="text-gray-600 text-sm space-y-1">
+                                    {highlight.examples.map((example, index) => (
+                                      <li key={index} className="flex items-start gap-1">
+                                        <span className="text-gray-400 mt-0.5">•</span>
+                                        <span>{example}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -412,8 +443,28 @@ function Highlight() {
 
               <button
                 type="button"
-                onClick={() => handleButtonClick('importPrompt', () => {
-                  // TODO: Implement import functionality
+                onClick={() => handleButtonClick('importPrompt', async () => {
+                  const explanationData = await importHighlightsFromClipboard()
+                  if (explanationData.length > 0) {
+                    // Update existing highlights with explanation data
+                    setHighlights((prev) => {
+                      return prev.map((highlight) => {
+                        const explanation = explanationData.find(exp => exp.id === highlight.id)
+                        if (explanation) {
+                          return {
+                            ...highlight,
+                            explanation: explanation.explanation,
+                            examples: explanation.examples,
+                            pronunciation: explanation.pronunciation,
+                          }
+                        }
+                        return highlight
+                      })
+                    })
+                  }
+                  else {
+                    throw new Error('No valid explanation data found in clipboard')
+                  }
                 })}
                 disabled={buttonStates.importPrompt === 'loading'}
                 className={cn(

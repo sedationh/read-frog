@@ -84,6 +84,10 @@ export interface HighlightData {
   context: string
   // domain + pathname
   pageUrl: string
+  // AI explanation fields (optional)
+  explanation?: string
+  examples?: string[]
+  pronunciation?: string
 }
 
 export const highlightsAtom = atomWithStorage<HighlightData[]>('highlightsAtom', [])
