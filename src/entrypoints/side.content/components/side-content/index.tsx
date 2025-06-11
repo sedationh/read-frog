@@ -3,7 +3,7 @@ import { useAtom, useAtomValue } from 'jotai'
 import { useEffect, useState } from 'react'
 import { Toaster } from 'sonner'
 
-import Highlight from '@/components/highlight'
+import Highlight from '@/entrypoints/side.content/components/highlight'
 import { configFields } from '@/utils/atoms/config'
 import { APP_NAME } from '@/utils/constants/app'
 import { cn } from '@/utils/tailwind'
