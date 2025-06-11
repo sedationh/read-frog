@@ -342,21 +342,21 @@ function Highlight() {
 
               {filteredHighlights.length > 0
                 ? (
-                    <div className="space-y-1.5 overflow-y-auto max-h-[600px]">
+                    <div className="space-y-2 overflow-y-auto max-h-[600px]">
                       {filteredHighlights.map(highlight => (
                         <div
                           key={highlight.id}
-                          className="p-2 bg-muted/50 rounded text-xs group"
+                          className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm group transition-colors duration-200 border border-gray-200"
                         >
                           <div className="flex items-center justify-between">
                             <button
                               type="button"
                               onClick={() => scrollToHighlight(highlight)}
-                              className="flex-1 truncate text-left hover:text-blue-600 transition-colors cursor-pointer"
+                              className="flex-1 truncate text-left hover:text-blue-600 transition-colors cursor-pointer font-medium"
                               title="Click to jump to highlight"
                             >
                               "
-                              {highlight.textContent.length > 30 ? `${highlight.textContent.substring(0, 30)}...` : highlight.textContent}
+                              {highlight.textContent.length > 40 ? `${highlight.textContent.substring(0, 40)}...` : highlight.textContent}
                               "
                             </button>
                             <button
@@ -365,36 +365,48 @@ function Highlight() {
                                 removeHighlight(highlight.id)
                                 setHighlights(prev => prev.filter(h => h.id !== highlight.id))
                               }}
-                              className="ml-2 p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="ml-3 p-1.5 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200"
                               title="Remove highlight"
                             >
-                              <Trash2 size={12} />
+                              <Trash2 size={14} />
                             </button>
                           </div>
 
                           {/* Show AI explanation if available */}
                           {highlight.explanation && (
-                            <div className="mt-2 space-y-2 border-t border-gray-200 pt-2">
+                            <div className="mt-3 space-y-3 border-t border-gray-200 pt-3">
                               <div>
-                                <div className="font-medium text-gray-700 mb-1">📖 Explanation:</div>
-                                <div className="text-gray-600 text-sm">{highlight.explanation}</div>
+                                <div className="font-semibold text-gray-800 mb-2 flex items-center gap-1">
+                                  <span>📖</span>
+                                  {' '}
+                                  Explanation:
+                                </div>
+                                <div className="text-gray-700 leading-relaxed">{highlight.explanation}</div>
                               </div>
 
                               {highlight.pronunciation && (
                                 <div>
-                                  <div className="font-medium text-gray-700 mb-1">🔊 Pronunciation:</div>
-                                  <div className="text-gray-600 text-sm font-mono">{highlight.pronunciation}</div>
+                                  <div className="font-semibold text-gray-800 mb-2 flex items-center gap-1">
+                                    <span>🔊</span>
+                                    {' '}
+                                    Pronunciation:
+                                  </div>
+                                  <div className="text-gray-700 font-mono bg-white px-2 py-1 rounded border">{highlight.pronunciation}</div>
                                 </div>
                               )}
 
                               {highlight.examples && highlight.examples.length > 0 && (
                                 <div>
-                                  <div className="font-medium text-gray-700 mb-1">💡 Examples:</div>
-                                  <ul className="text-gray-600 text-sm space-y-1">
+                                  <div className="font-semibold text-gray-800 mb-2 flex items-center gap-1">
+                                    <span>💡</span>
+                                    {' '}
+                                    Examples:
+                                  </div>
+                                  <ul className="text-gray-700 space-y-1.5">
                                     {highlight.examples.map((example, index) => (
-                                      <li key={index} className="flex items-start gap-1">
-                                        <span className="text-gray-400 mt-0.5">•</span>
-                                        <span>{example}</span>
+                                      <li key={index} className="flex items-start gap-2">
+                                        <span className="text-blue-500 mt-1 text-xs">•</span>
+                                        <span className="leading-relaxed">{example}</span>
                                       </li>
                                     ))}
                                   </ul>
@@ -407,11 +419,14 @@ function Highlight() {
                     </div>
                   )
                 : (
-                    <p className="text-xs text-muted-foreground italic py-2">
-                      {highlights.length === 0
-                        ? 'Select text on the page to highlight'
-                        : `No highlights match the current filter. ${highlights.length} total highlights available.`}
-                    </p>
+                    <div className="text-center py-8">
+                      <div className="text-4xl mb-2">📝</div>
+                      <p className="text-sm text-gray-600 font-medium">
+                        {highlights.length === 0
+                          ? 'Select text on the page to highlight'
+                          : `No highlights match the current filter. ${highlights.length} total highlights available.`}
+                      </p>
+                    </div>
                   )}
             </div>
 
