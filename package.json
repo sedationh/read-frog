@@ -45,6 +45,7 @@
     "@tanstack/react-query-devtools": "^5.74.4",
     "@webext-core/messaging": "^2.2.0",
     "@wxt-dev/i18n": "^0.2.4",
+    "ahooks": "^3.8.5",
     "ai": "^4.3.13",
     "case-anything": "^3.1.2",
     "class-variance-authority": "^0.7.1",
