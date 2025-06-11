@@ -1,5 +1,5 @@
 import type { HighlightData } from '@/entrypoints/side.content/atoms'
-import { useMount } from 'ahooks'
+import { useLocalStorageState, useMount } from 'ahooks'
 import { useAtom } from 'jotai'
 import { Highlighter, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -17,7 +17,9 @@ const COLOR_OPTIONS = [
 function Highlight() {
   const [highlights, setHighlights] = useAtom(highlightsAtom)
   const [isActive, setIsActive] = useState(true)
-  const [highlightColor, setHighlightColor] = useState(COLOR_OPTIONS[0].color) // Default yellow
+  const [highlightColor, setHighlightColor] = useLocalStorageState('highlightColor', {
+    defaultValue: COLOR_OPTIONS[0].color,
+  }) // Default yellow
   const [conflictMessage, setConflictMessage] = useState('')
   const [colorFilter, setColorFilter] = useState<Set<string>>(() => new Set(COLOR_OPTIONS.map(v => v.meaning)))
 
@@ -367,7 +369,7 @@ function Highlight() {
           </>
         )}
       </div>
-      <pre>
+      <pre className="text-xs max-w-full overflow-x-auto">
         {JSON.stringify(highlights, null, 2)}
       </pre>
     </div>

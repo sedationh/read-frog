@@ -1,4 +1,5 @@
 import type { HighlightData } from '../atoms'
+import nlp from 'compromise'
 import getXPath from 'get-xpath'
 
 export function generateHighlightId(): string {
@@ -19,6 +20,125 @@ export function getNodeByXPath(xpath: string): Node | null {
   catch (error) {
     console.error('XPath查找失败:', error, xpath)
     return null
+  }
+}
+
+// 获取选中文本周围的上下文句子
+export function getContextAroundRange(range: Range): string {
+  try {
+    // 获取包含选中文本的完整文本内容
+    const rootContainer = range.commonAncestorContainer
+    let textContainer = rootContainer
+
+    // 如果是元素节点，尝试获取其文本内容
+    if (textContainer.nodeType === Node.ELEMENT_NODE) {
+      textContainer = textContainer as Element
+    }
+    else {
+      // 如果是文本节点，获取其父元素
+      textContainer = textContainer.parentElement || textContainer
+    }
+
+    const fullText = (textContainer as Element).textContent || ''
+    if (!fullText)
+      return ''
+
+    // 获取选中文本在完整文本中的位置
+    const selectedText = range.toString().trim()
+    const selectedIndex = fullText.indexOf(selectedText)
+
+    if (selectedIndex === -1)
+      return selectedText
+
+    // 使用 NLP 库进行智能句子分割
+    const doc = nlp(fullText)
+    const sentences = doc.sentences().out('array') as string[]
+
+    if (sentences.length === 0)
+      return selectedText
+
+    // 找到包含选中文本的句子
+    let selectedSentenceIndex = -1
+    let currentPosition = 0
+
+    for (let i = 0; i < sentences.length; i++) {
+      const sentenceStart = currentPosition
+      const sentenceEnd = currentPosition + sentences[i].length
+
+      if (selectedIndex >= sentenceStart && selectedIndex < sentenceEnd) {
+        selectedSentenceIndex = i
+        break
+      }
+
+      currentPosition = sentenceEnd
+    }
+
+    if (selectedSentenceIndex === -1) {
+      // 如果没找到，使用原始逻辑作为fallback
+      return selectedText
+    }
+
+    // 获取前后句子的上下文（最多前后各2句）
+    const startIndex = Math.max(0, selectedSentenceIndex - 2)
+    const endIndex = Math.min(sentences.length - 1, selectedSentenceIndex + 2)
+
+    let context = sentences.slice(startIndex, endIndex + 1).join(' ').trim()
+
+    // 如果上下文太长，进行适当裁剪
+    const maxLength = 300
+    if (context.length > maxLength) {
+      // 从选中句子开始，向前后扩展
+      context = sentences[selectedSentenceIndex]
+
+      // 尝试添加前面的句子
+      for (let i = selectedSentenceIndex - 1; i >= startIndex; i--) {
+        const newContext = `${sentences[i]} ${context}`
+        if (newContext.length <= maxLength) {
+          context = newContext
+        }
+        else {
+          break
+        }
+      }
+
+      // 尝试添加后面的句子
+      for (let i = selectedSentenceIndex + 1; i <= endIndex; i++) {
+        const newContext = `${context} ${sentences[i]}`
+        if (newContext.length <= maxLength) {
+          context = newContext
+        }
+        else {
+          break
+        }
+      }
+
+      // 如果还是太长，在句子边界截断
+      if (context.length > maxLength) {
+        context = context.substring(0, maxLength).trim()
+        // 寻找最后一个句子结束符
+        const lastPeriod = Math.max(
+          context.lastIndexOf('.'),
+          context.lastIndexOf('!'),
+          context.lastIndexOf('?'),
+          context.lastIndexOf('。'),
+          context.lastIndexOf('！'),
+          context.lastIndexOf('？'),
+        )
+        if (lastPeriod > maxLength * 0.7) {
+          context = context.substring(0, lastPeriod + 1)
+        }
+        else {
+          context = `${context}...`
+        }
+      }
+    }
+
+    return context
+  }
+  catch (error) {
+    console.error('获取上下文失败:', error)
+    // 发生错误时，返回选中文本本身作为fallback
+    return range.toString().trim()
   }
 }
 
@@ -43,7 +163,7 @@ export function createHighlightData(range: Range, highlightColor: string) {
       offset: range.endOffset,
     },
     timestamp: Date.now(),
-    context: '',
+    context: getContextAroundRange(range),
     pageUrl: window.location.origin + window.location.pathname,
   }
 
