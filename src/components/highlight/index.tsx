@@ -217,8 +217,6 @@ function Highlight({ className }: HighlightProps) {
         }
       })
     })
-    // Clear from state
-    setHighlights([])
   }
 
   const createHighlight = (range: Range, textContent: string) => {
@@ -418,7 +416,10 @@ function Highlight({ className }: HighlightProps) {
           {highlights.length > 0 && (
             <button
               type="button"
-              onClick={removeAllHighlights}
+              onClick={() => {
+                removeAllHighlights()
+                setHighlights([])
+              }}
               className="flex items-center gap-1 px-2 py-1 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
             >
               <Trash2 size={12} />
@@ -427,7 +428,16 @@ function Highlight({ className }: HighlightProps) {
           )}
           <button
             type="button"
-            onClick={() => setIsActive(!isActive)}
+            onClick={() => {
+              const nextState = !isActive
+              setIsActive(nextState)
+              if (nextState === false) {
+                removeAllHighlights()
+              }
+              else {
+                restoreHighlights(highlights)
+              }
+            }}
             className={cn(
               'px-2 py-1 text-xs font-medium rounded transition-colors',
               isActive
@@ -631,20 +641,6 @@ function Highlight({ className }: HighlightProps) {
               💡 Select text to highlight. Click highlighted text to jump to its location.
             </div>
 
-            {/* Debug Section */}
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <button
-                  className="bg-blue-500 text-white px-2 py-1 rounded text-xs"
-                  type="button"
-                  onClick={() => {
-                    restoreHighlights(highlights)
-                  }}
-                >
-                  Restore All
-                </button>
-              </div>
-            </div>
           </>
         )}
       </div>
