@@ -1,12 +1,11 @@
 import type { HighlightData } from '@/entrypoints/side.content/atoms'
 import { useMount } from 'ahooks'
-import getXPath from 'get-xpath'
 import { useAtom } from 'jotai'
 import { Highlighter, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { highlightsAtom } from '@/entrypoints/side.content/atoms'
 import { cn } from '@/utils/tailwind'
-import { checkHighlightConflicts, createHighlightData, generateHighlightId, removeAllHighlights, removeHighlight, restoreHighlightFromRange, restoreHighlights, scrollToHighlight } from '../../utils/highlight'
+import { checkHighlightConflicts, createHighlightData, removeAllHighlights, removeHighlight, restoreHighlightFromRange, restoreHighlights, scrollToHighlight } from '../../utils/highlight'
 
 // Color options for highlighting
 const COLOR_OPTIONS = [
