@@ -84,18 +84,12 @@ function Highlight() {
   const getColorCounts = () => {
     const counts: Record<string, number> = {}
     COLOR_OPTIONS.forEach((option) => {
-      counts[option.meaning] = highlights.filter(h => h.color === option.color).length
+      counts[option.meaning] = highlights.filter(h => h.color === option.color && h.pageUrl === window.location.origin + window.location.pathname).length
     })
     return counts
   }
 
   const colorCounts = getColorCounts()
-
-  // Filter highlights based on selected colors
-  const filteredHighlights = highlights.filter((highlight) => {
-    const option = COLOR_OPTIONS.find(opt => opt.color === highlight.color)
-    return option && colorFilter.has(option.meaning)
-  })
 
   // Toggle color filter
   const toggleColorFilter = (meaning: string) => {
@@ -144,6 +138,14 @@ function Highlight() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, highlightColor, highlights])
 
+  const currentHighlights = highlights.filter(h => h.pageUrl === window.location.origin + window.location.pathname)
+
+  // Filter highlights based on selected colors
+  const filteredHighlights = currentHighlights.filter((highlight) => {
+    const option = COLOR_OPTIONS.find(opt => opt.color === highlight.color)
+    return option && colorFilter.has(option.meaning)
+  })
+
   return (
     <div className={cn('border-b border-border')}>
       {/* Header */}
@@ -151,19 +153,19 @@ function Highlight() {
         <div className="flex items-center gap-2">
           <Highlighter size={16} className="text-blue-500" />
           <span className="text-sm font-medium">Text Highlighter</span>
-          {highlights.length > 0 && (
+          {currentHighlights.length > 0 && (
             <span className="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full">
-              {highlights.length}
+              {currentHighlights.length}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
-          {highlights.length > 0 && (
+          {currentHighlights.length > 0 && (
             <button
               type="button"
               onClick={() => {
                 removeAllHighlights(highlights)
-                setHighlights([])
+                setHighlights(highlights.filter(h => h.pageUrl !== window.location.origin + window.location.pathname))
               }}
               className="flex items-center gap-1 px-2 py-1 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
             >
@@ -275,14 +277,14 @@ function Highlight() {
                   {' '}
                   of
                   {' '}
-                  {highlights.length}
+                  {currentHighlights.length}
                   {' '}
                   shown)
                 </h4>
               </div>
 
               {/* Color Filter Buttons */}
-              {highlights.length > 0 && (
+              {currentHighlights.length > 0 && (
                 <div className="mb-3">
                   <div className="flex items-center gap-1 mb-1">
                     <span className="text-xs text-muted-foreground">Filter by status:</span>
@@ -427,9 +429,9 @@ function Highlight() {
                     <div className="text-center py-8">
                       <div className="text-4xl mb-2">📝</div>
                       <p className="text-sm text-gray-600 font-medium">
-                        {highlights.length === 0
+                        {currentHighlights.length === 0
                           ? 'Select text on the page to highlight'
-                          : `No highlights match the current filter. ${highlights.length} total highlights available.`}
+                          : `No highlights match the current filter. ${currentHighlights.length} total highlights available.`}
                       </p>
                     </div>
                   )}
@@ -444,7 +446,7 @@ function Highlight() {
             <div className="flex items-stretch gap-2">
               <button
                 type="button"
-                onClick={() => handleButtonClick('copyPrompt', () => copyPromptToClipboard(highlights))}
+                onClick={() => handleButtonClick('copyPrompt', () => copyPromptToClipboard(currentHighlights))}
                 disabled={buttonStates.copyPrompt === 'loading'}
                 className={cn(
                   'flex flex-1 items-center gap-1 px-3 py-2 text-xs font-medium border rounded transition-colors',
@@ -506,7 +508,7 @@ function Highlight() {
                 type="button"
                 onClick={() => handleButtonClick('exportAnki', async () => {
                   // Export highlights that have explanation data to Anki
-                  const highlightsWithExplanations = highlights.filter(h => h.explanation?.trim?.()?.length && h.color === '#fbbf24')
+                  const highlightsWithExplanations = currentHighlights.filter(h => h.explanation?.trim?.()?.length && h.color === '#fbbf24')
 
                   if (highlightsWithExplanations.length === 0) {
                     throw new Error('No highlights with explanations found. Please import explanations first.')

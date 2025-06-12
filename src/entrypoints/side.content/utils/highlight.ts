@@ -266,7 +266,8 @@ export function createHighlightElement(id: string, color: string, selectedText: 
 }
 
 export function restoreHighlights(highlights: HighlightData[]) {
-  highlights.forEach((highlight) => {
+  const currentHighlights = highlights.filter(h => h.pageUrl === window.location.origin + window.location.pathname)
+  currentHighlights.forEach((highlight) => {
     try {
       const startNode = getNodeByXPath(highlight.startContainer.xpath)
       const endNode = getNodeByXPath(highlight.endContainer.xpath)
