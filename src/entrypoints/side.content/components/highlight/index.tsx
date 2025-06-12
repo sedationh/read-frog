@@ -1,7 +1,7 @@
 import type { HighlightData } from '@/entrypoints/side.content/atoms'
 import { useLocalStorageState, useMount } from 'ahooks'
 import { useAtom } from 'jotai'
-import { Check, Copy, Download, FileText, Highlighter, Loader2, Plus, Trash2 } from 'lucide-react'
+import { Check, Copy, Download, FileText, Highlighter, Loader2, Palette, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { highlightsAtom } from '@/entrypoints/side.content/atoms'
 import { addNote, copyPromptToClipboard, importHighlightsFromClipboard } from '@/entrypoints/side.content/utils/anki'
@@ -28,6 +28,7 @@ function Highlight() {
     importPrompt: 'idle',
     exportAnki: 'idle',
   })
+  const [openColorPicker, setOpenColorPicker] = useState<string | null>(null)
 
   useMount(() => {
     restoreHighlights(highlights)
@@ -35,6 +36,14 @@ function Highlight() {
 
   const addHighlight = (highlight: HighlightData) => {
     setHighlights(prev => [...prev, highlight])
+  }
+
+  // Change color of existing highlight
+  const changeHighlightColor = (highlightId: string, newColor: string) => {
+    const newHighlights = highlights.map(h => h.id === highlightId ? { ...h, color: newColor } : h)
+    setHighlights(newHighlights)
+    removeAllHighlights(highlights)
+    restoreHighlights(newHighlights)
   }
 
   // Handle button feedback
@@ -366,17 +375,62 @@ function Highlight() {
                               {highlight.textContent.length > 40 ? `${highlight.textContent.substring(0, 40)}...` : highlight.textContent}
                               "
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                removeHighlight(highlight.id)
-                                setHighlights(prev => prev.filter(h => h.id !== highlight.id))
-                              }}
-                              className="ml-3 p-1.5 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200"
-                              title="Remove highlight"
-                            >
-                              <Trash2 size={14} />
-                            </button>
+                            <div className="flex items-center gap-1 ml-3 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                              {/* Color change dropdown */}
+                              <div className="relative color-picker-container">
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenColorPicker(openColorPicker === highlight.id ? null : highlight.id)}
+                                  className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                                  title="Change color"
+                                >
+                                  <Palette size={14} />
+                                </button>
+                                {openColorPicker === highlight.id && (
+                                  <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                                    <div className="p-2 flex gap-1">
+                                      {COLOR_OPTIONS.map(({ color, name }) => (
+                                        <button
+                                          key={color}
+                                          type="button"
+                                          onClick={() => {
+                                            changeHighlightColor(highlight.id, color)
+                                            setOpenColorPicker(null)
+                                          }}
+                                          title={`Change to ${name}`}
+                                          className={cn(
+                                            'w-6 h-6 rounded-md border-2 transition-all hover:scale-110',
+                                            color === 'transparent' && 'bg-gray-100 border-dashed',
+                                            highlight.color === color
+                                              ? 'border-gray-600 ring-2 ring-blue-300 ring-opacity-50'
+                                              : 'border-gray-300 hover:border-gray-500',
+                                          )}
+                                          style={{ backgroundColor: color === 'transparent' ? 'transparent' : color }}
+                                        >
+                                          {highlight.color === color && color !== 'transparent' && (
+                                            <div className="w-1 h-1 bg-gray-800 rounded-full mx-auto"></div>
+                                          )}
+                                          {highlight.color === color && color === 'transparent' && (
+                                            <div className="w-1 h-1 bg-blue-600 rounded-full mx-auto"></div>
+                                          )}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  removeHighlight(highlight.id)
+                                  setHighlights(prev => prev.filter(h => h.id !== highlight.id))
+                                }}
+                                className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-md transition-colors"
+                                title="Remove highlight"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           </div>
 
                           {/* Show AI explanation if available */}
