@@ -13,6 +13,7 @@ const COLOR_OPTIONS = [
   { color: 'transparent', name: 'Disabled', meaning: 'no_highlight' },
   { color: '#fbbf24', name: 'Yellow', meaning: 'highlight' },
   { color: '#e5e7eb', name: 'Gray', meaning: 'has_add_to_anki' },
+  { color: '#34d399', name: 'Light Green', meaning: 'good' },
 ]
 
 function Highlight() {
