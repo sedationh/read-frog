@@ -10,7 +10,6 @@ import { cn } from '@/utils/tailwind'
 
 import { MIN_SIDE_CONTENT_WIDTH } from '../../../../utils/constants/side'
 import { isSideOpenAtom } from '../../atoms'
-import { TopBar } from './top-bar'
 
 export default function SideContent() {
   const isSideOpen = useAtomValue(isSideOpenAtom)

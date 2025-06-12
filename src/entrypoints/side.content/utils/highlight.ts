@@ -164,7 +164,7 @@ export function createHighlightData(range: Range, highlightColor: string) {
     },
     timestamp: Date.now(),
     context: getContextAroundRange(range),
-    pageUrl: window.location.origin + window.location.pathname,
+    pageUrl: buildPageUrl(),
   }
 
   return highlightData
@@ -265,8 +265,26 @@ export function createHighlightElement(id: string, color: string, selectedText: 
   return highlightElement
 }
 
+export function buildPageUrl() {
+  // 考虑这种 hash 路由
+  // https://web.neat-reader.orb.local/#/epubreader?bookguid=34e724f7-972f-489b-a732-92edab894faf
+  // 需要考虑这种 query 路由
+  // https://web.neat-reader.orb.local/epubreader?bookguid=34e724f7-972f-489b-a732-92edab894faf
+  const hash = window.location.hash
+  // isHash route
+  if (hash.startsWith('#')) {
+    const hashPath = hash.split('?')[0]
+    const hashQuery = hash.split('?')[1]
+    return `${window.location.origin + window.location.pathname + hashPath}${hashQuery ? `?${hashQuery}` : ''}`
+  }
+  // isQuery route
+  else {
+    return `${window.location.origin + window.location.pathname + window.location.search}`
+  }
+}
+
 export function restoreHighlights(highlights: HighlightData[]) {
-  const currentHighlights = highlights.filter(h => h.pageUrl === window.location.origin + window.location.pathname)
+  const currentHighlights = highlights.filter(h => h.pageUrl === buildPageUrl())
   currentHighlights.forEach((highlight) => {
     try {
       const startNode = getNodeByXPath(highlight.startContainer.xpath)

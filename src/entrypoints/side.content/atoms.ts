@@ -82,7 +82,7 @@ export interface HighlightData {
   }
   timestamp: number
   context: string
-  // domain + pathname
+  // domain + pathname + query (注意考虑 hash 路由)
   pageUrl: string
   // AI explanation fields (optional)
   explanation?: string

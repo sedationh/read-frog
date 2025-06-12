@@ -1,12 +1,12 @@
 import type { HighlightData } from '@/entrypoints/side.content/atoms'
-import { useLocalStorageState, useMount } from 'ahooks'
+import { useGetState, useLocalStorageState, useMount } from 'ahooks'
 import { useAtom } from 'jotai'
 import { Check, Copy, Download, FileText, Highlighter, Loader2, Palette, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { highlightsAtom } from '@/entrypoints/side.content/atoms'
 import { addNote, copyPromptToClipboard, importHighlightsFromClipboard } from '@/entrypoints/side.content/utils/anki'
 import { cn } from '@/utils/tailwind'
-import { checkHighlightConflicts, createHighlightData, removeAllHighlights, removeHighlight, restoreHighlightFromRange, restoreHighlights, scrollToHighlight } from '../../utils/highlight'
+import { buildPageUrl, checkHighlightConflicts, createHighlightData, removeAllHighlights, removeHighlight, restoreHighlightFromRange, restoreHighlights, scrollToHighlight } from '../../utils/highlight'
 
 // Color options for highlighting
 const COLOR_OPTIONS = [
@@ -30,9 +30,27 @@ function Highlight() {
   })
   const [openColorPicker, setOpenColorPicker] = useState<string | null>(null)
 
-  useMount(() => {
-    restoreHighlights(highlights)
-  })
+  // const lastPageUrl = useRef(buildPageUrl())
+  const [_, setLastPageUrl, getLastPageUrl] = useGetState('')
+
+  useEffect(() => {
+    const handlePageChange = () => {
+      removeAllHighlights(highlights)
+      restoreHighlights(highlights)
+    }
+    // 用 setInterval 来监听
+    const interval = setInterval(() => {
+      if (getLastPageUrl() === buildPageUrl()) {
+        return
+      }
+      handlePageChange()
+      setLastPageUrl(() => buildPageUrl())
+    }, 200)
+    return () => {
+      clearInterval(interval)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlights])
 
   const addHighlight = (highlight: HighlightData) => {
     setHighlights(prev => [...prev, highlight])
@@ -93,7 +111,7 @@ function Highlight() {
   const getColorCounts = () => {
     const counts: Record<string, number> = {}
     COLOR_OPTIONS.forEach((option) => {
-      counts[option.meaning] = highlights.filter(h => h.color === option.color && h.pageUrl === window.location.origin + window.location.pathname).length
+      counts[option.meaning] = highlights.filter(h => h.color === option.color && h.pageUrl === buildPageUrl()).length
     })
     return counts
   }
@@ -147,7 +165,7 @@ function Highlight() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, highlightColor, highlights])
 
-  const currentHighlights = highlights.filter(h => h.pageUrl === window.location.origin + window.location.pathname)
+  const currentHighlights = highlights.filter(h => h.pageUrl === buildPageUrl())
 
   // Filter highlights based on selected colors
   const filteredHighlights = currentHighlights.filter((highlight) => {
@@ -157,7 +175,6 @@ function Highlight() {
 
   return (
     <div className={cn('border-b border-border')}>
-      {/* Header */}
       <div className="flex w-full items-center justify-between p-3">
         <div className="flex items-center gap-2">
           <Highlighter size={16} className="text-blue-500" />
@@ -174,7 +191,7 @@ function Highlight() {
               type="button"
               onClick={() => {
                 removeAllHighlights(highlights)
-                setHighlights(highlights.filter(h => h.pageUrl !== window.location.origin + window.location.pathname))
+                setHighlights(highlights.filter(h => h.pageUrl !== buildPageUrl()))
               }}
               className="flex items-center gap-1 px-2 py-1 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
             >
