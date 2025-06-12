@@ -89,6 +89,7 @@ export default function SideContent() {
   return (
     <>
       <div
+        translate="no"
         className={cn(
           'bg-background fixed top-0 right-0 z-[2147483647] h-full pr-[var(--removed-body-scroll-bar-size,0px)]',
           isSideOpen
@@ -107,7 +108,6 @@ export default function SideContent() {
         </div>
 
         <div className="flex h-full flex-col gap-y-2 py-3 overflow-y-auto">
-          <TopBar className="mx-3" />
           <Highlight />
         </div>
         <Toaster position="top-center" richColors className="z-[2147483647]" duration={10000} />
