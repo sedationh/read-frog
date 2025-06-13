@@ -439,6 +439,17 @@ function Highlight() {
                               <div className="relative color-picker-container">
                                 <button
                                   type="button"
+                                  onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(`${highlight.textContent} meaning`)}`, '_blank')}
+                                  className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-100 rounded-md transition-colors"
+                                  title="Search on Google"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                  </svg>
+                                </button>
+                                <button
+                                  type="button"
                                   onClick={() => setOpenColorPicker(openColorPicker === highlight.id ? null : highlight.id)}
                                   className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
                                   title="Change color"
@@ -492,17 +503,7 @@ function Highlight() {
                               >
                                 <StickyNote size={14} />
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(`${highlight.textContent} meaning`)}`, '_blank')}
-                                className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-100 rounded-md transition-colors"
-                                title="Search on Google"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <circle cx="11" cy="11" r="8"></circle>
-                                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                                </svg>
-                              </button>
+
                               <button
                                 type="button"
                                 onClick={() => {
