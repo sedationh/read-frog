@@ -1,8 +1,8 @@
 import type { HighlightData } from '@/entrypoints/side.content/atoms'
-import { useGetState, useLocalStorageState, useMount } from 'ahooks'
+import { useGetState, useLocalStorageState } from 'ahooks'
 import { useAtom } from 'jotai'
-import { Check, ChevronDown, ChevronRight, Copy, Download, FileText, Highlighter, Loader2, Palette, Plus, StickyNote, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Check, ChevronDown, ChevronRight, Copy, Download, FileText, Highlighter, Loader2, Palette, StickyNote, Trash2 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { highlightsAtom } from '@/entrypoints/side.content/atoms'
 import { addNote, copyPromptToClipboard, importHighlightsFromClipboard } from '@/entrypoints/side.content/utils/anki'
 import { cn } from '@/utils/tailwind'
@@ -39,6 +39,7 @@ function Highlight() {
 
   // const lastPageUrl = useRef(buildPageUrl())
   const [_, setLastPageUrl, getLastPageUrl] = useGetState('')
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handlePageChange = () => {
@@ -143,6 +144,18 @@ function Highlight() {
     })
   }
 
+  function scrollToHighlightWithList(highlight: HighlightData) {
+    const listItem = containerRef?.current?.querySelector(`[data-highlight-item="${highlight.id}"]`)
+    if (!listItem) {
+      return
+    }
+    listItem.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'nearest',
+    })
+  }
+
   useEffect(() => {
     if (!isActive || highlightColor === 'transparent')
       return
@@ -166,8 +179,22 @@ function Highlight() {
     // 扩展向页面注入事件监听
     document.addEventListener('mouseup', handleMouseUp)
 
+    const handleClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      const highlightId = target?.getAttribute('data-highlight-id')
+      if (highlightId) {
+        // 在当前 highlights 中查找对应的 highlight
+        const highlight = highlights.find(h => h.id === highlightId)
+        if (highlight) {
+          scrollToHighlightWithList(highlight)
+        }
+      }
+    }
+    window.addEventListener('click', handleClick)
+
     return () => {
       document.removeEventListener('mouseup', handleMouseUp)
+      window.removeEventListener('click', handleClick)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, highlightColor, highlights])
@@ -377,11 +404,15 @@ function Highlight() {
 
               {filteredHighlights.length > 0
                 ? (
-                    <div className="space-y-2 overflow-y-auto max-h-[600px]">
+                    <div
+                      className="space-y-2 overflow-y-auto max-h-[600px]"
+                      ref={containerRef}
+                    >
                       {filteredHighlights.map(highlight => (
                         <div
                           key={highlight.id}
                           className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm group transition-colors duration-200 border border-gray-200"
+                          data-highlight-item={highlight.id}
                         >
                           <div
                             style={{
