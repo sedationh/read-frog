@@ -179,6 +179,13 @@ function Highlight() {
     // 扩展向页面注入事件监听
     document.addEventListener('mouseup', handleMouseUp)
 
+    return () => {
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive, highlightColor, highlights])
+
+  useEffect(() => {
     const handleClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement
       const highlightId = target?.getAttribute('data-highlight-id')
@@ -191,13 +198,10 @@ function Highlight() {
       }
     }
     window.addEventListener('click', handleClick)
-
     return () => {
-      document.removeEventListener('mouseup', handleMouseUp)
       window.removeEventListener('click', handleClick)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, highlightColor, highlights])
+  }, [highlights])
 
   const currentHighlights = highlights.filter(h => h.pageUrl === buildPageUrl())
 
