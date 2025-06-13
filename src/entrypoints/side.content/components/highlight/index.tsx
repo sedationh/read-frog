@@ -1,12 +1,13 @@
 import type { HighlightData } from '@/entrypoints/side.content/atoms'
 import { useGetState, useLocalStorageState, useMount } from 'ahooks'
 import { useAtom } from 'jotai'
-import { Check, Copy, Download, FileText, Highlighter, Loader2, Palette, Plus, Trash2 } from 'lucide-react'
+import { Check, ChevronDown, ChevronRight, Copy, Download, FileText, Highlighter, Loader2, Palette, Plus, StickyNote, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { highlightsAtom } from '@/entrypoints/side.content/atoms'
 import { addNote, copyPromptToClipboard, importHighlightsFromClipboard } from '@/entrypoints/side.content/utils/anki'
 import { cn } from '@/utils/tailwind'
 import { buildPageUrl, checkHighlightConflicts, createHighlightData, removeAllHighlights, removeHighlight, restoreHighlightFromRange, restoreHighlights, scrollToHighlight } from '../../utils/highlight'
+import { NoteDialog } from './NoteDialog'
 
 // Color options for highlighting
 const COLOR_OPTIONS = [
@@ -30,6 +31,11 @@ function Highlight() {
     exportAnki: 'idle',
   })
   const [openColorPicker, setOpenColorPicker] = useState<string | null>(null)
+  const [noteDialog, setNoteDialog] = useState<{ isOpen: boolean, highlightId: string | null, initialNote?: string }>({
+    isOpen: false,
+    highlightId: null,
+  })
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set())
 
   // const lastPageUrl = useRef(buildPageUrl())
   const [_, setLastPageUrl, getLastPageUrl] = useGetState('')
@@ -439,6 +445,20 @@ function Highlight() {
                               </div>
                               <button
                                 type="button"
+                                onClick={() => {
+                                  setNoteDialog({
+                                    isOpen: true,
+                                    highlightId: highlight.id,
+                                    initialNote: highlight.note,
+                                  })
+                                }}
+                                className="p-1.5 text-orange-500 hover:text-orange-700 hover:bg-orange-100 rounded-md transition-colors"
+                                title="Add or edit note"
+                              >
+                                <StickyNote size={14} />
+                              </button>
+                              <button
+                                type="button"
                                 onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(`${highlight.textContent} meaning`)}`, '_blank')}
                                 className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-100 rounded-md transition-colors"
                                 title="Search on Google"
@@ -500,6 +520,43 @@ function Highlight() {
                                       </li>
                                     ))}
                                   </ul>
+                                </div>
+                              )}
+
+                              {highlight.note && (
+                                <div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setExpandedNotes((prev) => {
+                                        const next = new Set(prev)
+                                        if (next.has(highlight.id)) {
+                                          next.delete(highlight.id)
+                                        }
+                                        else {
+                                          next.add(highlight.id)
+                                        }
+                                        return next
+                                      })
+                                    }}
+                                    className="w-full flex items-center gap-1 text-left font-semibold text-gray-800 mb-2 hover:text-gray-900"
+                                  >
+                                    {expandedNotes.has(highlight.id)
+                                      ? (
+                                          <ChevronDown size={16} className="text-gray-500" />
+                                        )
+                                      : (
+                                          <ChevronRight size={16} className="text-gray-500" />
+                                        )}
+                                    <span>📝</span>
+                                    {' '}
+                                    Note
+                                  </button>
+                                  {expandedNotes.has(highlight.id) && (
+                                    <div className="text-gray-700 leading-relaxed bg-gray-50 p-3 rounded border font-mono text-sm whitespace-pre-wrap break-words">
+                                      {highlight.note}
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -649,6 +706,18 @@ function Highlight() {
           </>
         )}
       </div>
+      <NoteDialog
+        isOpen={noteDialog.isOpen}
+        onClose={() => setNoteDialog({ isOpen: false, highlightId: null })}
+        onSave={(note) => {
+          if (noteDialog.highlightId) {
+            setHighlights(prev => prev.map(h =>
+              h.id === noteDialog.highlightId ? { ...h, note } : h,
+            ))
+          }
+        }}
+        initialNote={noteDialog.initialNote}
+      />
       <pre className="text-xs max-w-full overflow-x-auto">
         {JSON.stringify(highlights, null, 2)}
       </pre>

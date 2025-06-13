@@ -88,6 +88,7 @@ export interface HighlightData {
   explanation?: string
   examples?: string[]
   pronunciation?: string
+  note?: string
 }
 
 export const highlightsAtom = atomWithStorage<HighlightData[]>('highlightsAtom', [])

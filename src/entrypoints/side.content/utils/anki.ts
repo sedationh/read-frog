@@ -160,6 +160,7 @@ export async function addNote(note: HighlightData) {
       问题: boldContext,
       答案: `${note.pronunciation}<br>${note.explanation}<br>${note.examples?.map(example => `- ${example}`).join('<br>') || ''}`,
       相关知识: `<a href="${note.pageUrl}">${note.pageUrl}</a>`,
+      笔记: note.note ? `<pre>${note.note}</pre>` : '',
     },
     options: {
       allowDuplicate: true,
