@@ -1,5 +1,11 @@
 # read-frog
 
+## 0.10.3
+
+### Patch Changes
+
+- [#133](https://github.com/mengxi-ream/read-frog/pull/133) [`31ecd4d`](https://github.com/mengxi-ream/read-frog/commit/31ecd4d21686bf6d02bb4a91c0c6aea4d09e7ffe) Thanks [@taiiiyang](https://github.com/taiiiyang)! - fix: flicker of the always translate switch
+
 ## 0.10.2
 
 ### Patch Changes
