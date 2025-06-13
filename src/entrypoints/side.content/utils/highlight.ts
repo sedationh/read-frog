@@ -363,8 +363,8 @@ export function scrollToHighlight(highlight: HighlightData) {
     const originalBoxShadow = (element as HTMLElement).style.boxShadow
     const originalTransition = (element as HTMLElement).style.transition
 
-      ;(element as HTMLElement).style.boxShadow = '0 0 8px rgba(59, 130, 246, 0.5)'
-    ;(element as HTMLElement).style.transition = 'box-shadow 0.3s ease'
+    ;(element as HTMLElement).style.boxShadow = '0 0 0 4px #3b82f6, 0 0 16px 4px #3b82f688'
+    ;(element as HTMLElement).style.transition = 'box-shadow 0.3s cubic-bezier(.4,2,.6,1)'
 
     setTimeout(() => {
       ;(element as HTMLElement).style.boxShadow = originalBoxShadow
